@@ -9,11 +9,28 @@
 /* Begin PBXBuildFile section */
 		D31EF7BE15712BC100A3CD4E /* libglfw.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D31EF7BC15712BC100A3CD4E /* libglfw.dylib */; };
 		D31EF7BF15712BC100A3CD4E /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D31EF7BD15712BC100A3CD4E /* OpenGL.framework */; };
+		D31EF7C915719B1E00A3CD4E /* ResourceManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D31EF7C715719B1E00A3CD4E /* ResourceManager.cpp */; };
+		D31EF7CE1572181500A3CD4E /* PhysFS.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D31EF7CA1572181400A3CD4E /* PhysFS.cpp */; };
+		D31EF7CF1572181500A3CD4E /* stb_image.c in Sources */ = {isa = PBXBuildFile; fileRef = D31EF7CC1572181400A3CD4E /* stb_image.c */; };
+		D31EF7D21572186E00A3CD4E /* libphysfs.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D31EF7D11572186E00A3CD4E /* libphysfs.dylib */; };
+		D31EF7D915722D3A00A3CD4E /* BasicVertex.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = D31EF7D515722C0C00A3CD4E /* BasicVertex.vert */; };
+		D31EF7DC15722EBB00A3CD4E /* BasicFragment.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = D31EF7DA15722DB400A3CD4E /* BasicFragment.frag */; };
 		D3EAF55C1566C97800F5394F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D3EAF55B1566C97800F5394F /* main.cpp */; };
 		D3EAF55E1566C97800F5394F /* TechDemo.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D3EAF55D1566C97800F5394F /* TechDemo.1 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		D31EF7D815722D2800A3CD4E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "~/techdemo/shaders";
+			dstSubfolderSpec = 0;
+			files = (
+				D31EF7DC15722EBB00A3CD4E /* BasicFragment.frag in CopyFiles */,
+				D31EF7D915722D3A00A3CD4E /* BasicVertex.vert in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D3EAF5551566C97800F5394F /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -29,6 +46,16 @@
 /* Begin PBXFileReference section */
 		D31EF7BC15712BC100A3CD4E /* libglfw.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.dylib; path = usr/local/lib/libglfw.dylib; sourceTree = SDKROOT; };
 		D31EF7BD15712BC100A3CD4E /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		D31EF7C715719B1E00A3CD4E /* ResourceManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ResourceManager.cpp; path = TechDemo/ResourceManager.cpp; sourceTree = "<group>"; };
+		D31EF7C815719B1E00A3CD4E /* ResourceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResourceManager.h; path = TechDemo/ResourceManager.h; sourceTree = "<group>"; };
+		D31EF7CA1572181400A3CD4E /* PhysFS.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PhysFS.cpp; path = TechDemo/PhysFS.cpp; sourceTree = "<group>"; };
+		D31EF7CB1572181400A3CD4E /* PhysFS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PhysFS.h; path = TechDemo/PhysFS.h; sourceTree = "<group>"; };
+		D31EF7CC1572181400A3CD4E /* stb_image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = stb_image.c; path = TechDemo/stb_image.c; sourceTree = "<group>"; };
+		D31EF7CD1572181400A3CD4E /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stb_image.h; path = TechDemo/stb_image.h; sourceTree = "<group>"; };
+		D31EF7D11572186E00A3CD4E /* libphysfs.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libphysfs.dylib; path = usr/local/lib/libphysfs.dylib; sourceTree = SDKROOT; };
+		D31EF7D41572190D00A3CD4E /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		D31EF7D515722C0C00A3CD4E /* BasicVertex.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = BasicVertex.vert; path = TechDemo/Shaders/BasicVertex.vert; sourceTree = "<group>"; };
+		D31EF7DA15722DB400A3CD4E /* BasicFragment.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = BasicFragment.frag; path = TechDemo/Shaders/BasicFragment.frag; sourceTree = "<group>"; };
 		D3EAF5571566C97800F5394F /* TechDemo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TechDemo; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3EAF55B1566C97800F5394F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D3EAF55D1566C97800F5394F /* TechDemo.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = TechDemo.1; sourceTree = "<group>"; };
@@ -39,6 +66,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D31EF7D21572186E00A3CD4E /* libphysfs.dylib in Frameworks */,
 				D31EF7BE15712BC100A3CD4E /* libglfw.dylib in Frameworks */,
 				D31EF7BF15712BC100A3CD4E /* OpenGL.framework in Frameworks */,
 			);
@@ -47,12 +75,45 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D31EF7D01572182900A3CD4E /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				D31EF7C815719B1E00A3CD4E /* ResourceManager.h */,
+				D31EF7CB1572181400A3CD4E /* PhysFS.h */,
+				D31EF7CD1572181400A3CD4E /* stb_image.h */,
+				D31EF7C715719B1E00A3CD4E /* ResourceManager.cpp */,
+				D31EF7CA1572181400A3CD4E /* PhysFS.cpp */,
+				D31EF7CC1572181400A3CD4E /* stb_image.c */,
+			);
+			name = Helpers;
+			sourceTree = "<group>";
+		};
+		D31EF7D31572189B00A3CD4E /* Libs */ = {
+			isa = PBXGroup;
+			children = (
+				D31EF7D11572186E00A3CD4E /* libphysfs.dylib */,
+				D31EF7BC15712BC100A3CD4E /* libglfw.dylib */,
+				D31EF7BD15712BC100A3CD4E /* OpenGL.framework */,
+			);
+			name = Libs;
+			sourceTree = "<group>";
+		};
+		D31EF7D715722D0E00A3CD4E /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				D31EF7D515722C0C00A3CD4E /* BasicVertex.vert */,
+				D31EF7DA15722DB400A3CD4E /* BasicFragment.frag */,
+			);
+			name = Shaders;
+			sourceTree = "<group>";
+		};
 		D3EAF54C1566C97700F5394F = {
 			isa = PBXGroup;
 			children = (
-				D31EF7BC15712BC100A3CD4E /* libglfw.dylib */,
-				D31EF7BD15712BC100A3CD4E /* OpenGL.framework */,
+				D31EF7D715722D0E00A3CD4E /* Shaders */,
 				D3EAF55A1566C97800F5394F /* TechDemo */,
+				D31EF7D01572182900A3CD4E /* Helpers */,
+				D31EF7D31572189B00A3CD4E /* Libs */,
 				D3EAF5581566C97800F5394F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -70,6 +131,7 @@
 			children = (
 				D3EAF55B1566C97800F5394F /* main.cpp */,
 				D3EAF55D1566C97800F5394F /* TechDemo.1 */,
+				D31EF7D41572190D00A3CD4E /* Constants.h */,
 			);
 			path = TechDemo;
 			sourceTree = "<group>";
@@ -84,6 +146,7 @@
 				D3EAF5531566C97800F5394F /* Sources */,
 				D3EAF5541566C97800F5394F /* Frameworks */,
 				D3EAF5551566C97800F5394F /* CopyFiles */,
+				D31EF7D815722D2800A3CD4E /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -125,6 +188,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				D3EAF55C1566C97800F5394F /* main.cpp in Sources */,
+				D31EF7C915719B1E00A3CD4E /* ResourceManager.cpp in Sources */,
+				D31EF7CE1572181500A3CD4E /* PhysFS.cpp in Sources */,
+				D31EF7CF1572181500A3CD4E /* stb_image.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -19,21 +19,35 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+// Personal libs
+#include "PhysFS.h"
+#include "ResourceManager.h"
 
 // Various hardcoded options
 #define TRIANGLE_DEBUGGING
 
 
-void opencontext();
+// loadin
+void initphysfs(const char *argv0);
 void loadshit();
+void loadobj(const std::string& name);
+// renderin
+void opencontext();
 void renderloop();
+// closedown
 void shutdowneverything();
+
+// woo globals
+GLuint VAO, VBO, VEB;
+GLuint program;
+OpenGL::ResourceManager *mgr;
 
 glm::mat4 projectionMatrix;
 
 int main(int argc, const char * argv[])
 {
     try {
+        initphysfs(argv[0]);
         opencontext();
         loadshit();
         renderloop();
@@ -60,8 +74,8 @@ void opencontext() {
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 2);
     glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     // TODO: Some kind of proper size detectione
-    int windowWidth  = 1280; // 1 standard resolution step smaller than my mbp's screen.
-    int windowHeight = 800;
+    const int windowWidth  = 1280; // 1 standard resolution step smaller than my mbp's screen.
+    const int windowHeight = 800;
     // Open a window
     if(!glfwOpenWindow(windowWidth, windowHeight, 0, 0, 0, 0, 32, 0, GLFW_WINDOW)) {
         throw std::runtime_error("Failed to open GLFW window");
@@ -86,7 +100,9 @@ void opencontext() {
     // Debuging
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 #endif
-
+    
+    // resource mgmnt
+    mgr = new OpenGL::ResourceManager();
     
     // Projectione
     projectionMatrix = glm::perspective(75.0f,  // FoV
@@ -95,6 +111,44 @@ void opencontext() {
         0.1f, 100.0f                            // nearZ, farZ
     );
 }
+
+void loadshit() {
+    VAO = mgr->CreateVAO();
+    VBO = mgr->CreateVBO();
+    VEB = mgr->CreateVBO();
+    program = mgr->LoadShaders("BasicVertex", "BasicFragment");
+    loadobj("teapot.obj");
+}
+
+void renderloop() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    while (glfwGetKey('Q') != GLFW_PRESS) {
+        glfwSwapBuffers();
+    }
+}
+void shutdowneverything() {
+    delete mgr;
+}
+
+void killphysfs() {
+	try {
+		PhysFS::deinit();
+	} catch(PhysFS::Exception) {}
+}
+void initphysfs(const char *argv0) {
+    try {
+		PhysFS::init(argv0);
+		PhysFS::mount("./", "", false);
+        std::atexit(killphysfs);
+	} catch (PhysFS::Exception& e) {
+        std::cerr << "Could not start PhysFS! " << e.what() << std::endl;
+        throw;
+	}
+}
+
+/*
+ Obj loader
+*/
 
 void nextline(std::istream& str) {
     const auto everything = std::numeric_limits<std::streamsize>::max();
@@ -106,12 +160,15 @@ bool whitespace(const char c) {
 bool newline(const char c) {
     return c == '\n' || c == '\r';
 }
-void loadshit() {
+
+void loadobj(const std::string& name) {
+    if (!PhysFS::exists(name))
+        throw std::runtime_error("Can't find the file " + name);
     using std::cout;
     using std::endl;
-    std::ifstream file;
+	PhysFS::FileStream file(name, PhysFS::OM_READ);
     file.exceptions(std::ios::failbit | std::ios::badbit);
-    file.open("teapot.obj");
+    //file.open(name);
     
     std::vector<float> poses;
     std::vector<float> normals;
@@ -154,14 +211,5 @@ void loadshit() {
         nextline(file);
     }
     cout << endl << "got " << poses.size() << " vertexes and " << normals.size() << " normals!" << endl;
-}
-
-void renderloop() {
-    glClear(GL_COLOR_BUFFER_BIT);
-    while (glfwGetKey('Q') != GLFW_PRESS)
-        glfwSwapBuffers();
-    // We aint loadin nowt
-}
-void shutdowneverything() {
-    // Nothing actually needs to die (yet!). GLFW will die on it own.
+    
 }
