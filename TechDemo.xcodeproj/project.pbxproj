@@ -15,6 +15,8 @@
 		D31EF7D21572186E00A3CD4E /* libphysfs.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D31EF7D11572186E00A3CD4E /* libphysfs.dylib */; };
 		D31EF7D915722D3A00A3CD4E /* BasicVertex.vert in CopyFiles */ = {isa = PBXBuildFile; fileRef = D31EF7D515722C0C00A3CD4E /* BasicVertex.vert */; };
 		D31EF7DC15722EBB00A3CD4E /* BasicFragment.frag in CopyFiles */ = {isa = PBXBuildFile; fileRef = D31EF7DA15722DB400A3CD4E /* BasicFragment.frag */; };
+		D31EF7DF157282F300A3CD4E /* InputManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D31EF7DD157282F300A3CD4E /* InputManager.cpp */; };
+		D31EF7E31573965000A3CD4E /* ObjLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D31EF7E21573965000A3CD4E /* ObjLoader.cpp */; };
 		D3EAF55C1566C97800F5394F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D3EAF55B1566C97800F5394F /* main.cpp */; };
 		D3EAF55E1566C97800F5394F /* TechDemo.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D3EAF55D1566C97800F5394F /* TechDemo.1 */; };
 /* End PBXBuildFile section */
@@ -56,6 +58,11 @@
 		D31EF7D41572190D00A3CD4E /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		D31EF7D515722C0C00A3CD4E /* BasicVertex.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = BasicVertex.vert; path = TechDemo/Shaders/BasicVertex.vert; sourceTree = "<group>"; };
 		D31EF7DA15722DB400A3CD4E /* BasicFragment.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = BasicFragment.frag; path = TechDemo/Shaders/BasicFragment.frag; sourceTree = "<group>"; };
+		D31EF7DD157282F300A3CD4E /* InputManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InputManager.cpp; path = TechDemo/InputManager.cpp; sourceTree = "<group>"; };
+		D31EF7DE157282F300A3CD4E /* InputManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InputManager.h; path = TechDemo/InputManager.h; sourceTree = "<group>"; };
+		D31EF7E01572830C00A3CD4E /* gl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = gl.h; path = TechDemo/gl.h; sourceTree = "<group>"; };
+		D31EF7E1157395D300A3CD4E /* ObjLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ObjLoader.h; path = TechDemo/ObjLoader.h; sourceTree = "<group>"; };
+		D31EF7E21573965000A3CD4E /* ObjLoader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ObjLoader.cpp; path = TechDemo/ObjLoader.cpp; sourceTree = "<group>"; };
 		D3EAF5571566C97800F5394F /* TechDemo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TechDemo; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3EAF55B1566C97800F5394F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D3EAF55D1566C97800F5394F /* TechDemo.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = TechDemo.1; sourceTree = "<group>"; };
@@ -78,12 +85,17 @@
 		D31EF7D01572182900A3CD4E /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				D31EF7DD157282F300A3CD4E /* InputManager.cpp */,
+				D31EF7DE157282F300A3CD4E /* InputManager.h */,
 				D31EF7C815719B1E00A3CD4E /* ResourceManager.h */,
 				D31EF7CB1572181400A3CD4E /* PhysFS.h */,
 				D31EF7CD1572181400A3CD4E /* stb_image.h */,
 				D31EF7C715719B1E00A3CD4E /* ResourceManager.cpp */,
 				D31EF7CA1572181400A3CD4E /* PhysFS.cpp */,
 				D31EF7CC1572181400A3CD4E /* stb_image.c */,
+				D31EF7E01572830C00A3CD4E /* gl.h */,
+				D31EF7E1157395D300A3CD4E /* ObjLoader.h */,
+				D31EF7E21573965000A3CD4E /* ObjLoader.cpp */,
 			);
 			name = Helpers;
 			sourceTree = "<group>";
@@ -191,6 +203,8 @@
 				D31EF7C915719B1E00A3CD4E /* ResourceManager.cpp in Sources */,
 				D31EF7CE1572181500A3CD4E /* PhysFS.cpp in Sources */,
 				D31EF7CF1572181500A3CD4E /* stb_image.c in Sources */,
+				D31EF7DF157282F300A3CD4E /* InputManager.cpp in Sources */,
+				D31EF7E31573965000A3CD4E /* ObjLoader.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

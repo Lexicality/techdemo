@@ -12,15 +12,15 @@ int  img_read(void *vstream, char *data, int amt);
 void img_skip(void *vstream, unsigned int amt);
 int  img_eof (void *vstream);
 static const stbi_io_callbacks cbacks = {
-	&img_read,
-	&img_skip,
-	&img_eof
+    &img_read,
+    &img_skip,
+    &img_eof
 };
 
 struct imgdata {
-	byte *data;
-	int  width;
-	int height;
+    byte *data;
+    int  width;
+    int height;
 };
 
 // Locals
@@ -31,189 +31,189 @@ void   genericShaderLoad (GLuint shaderID, const std::string& name, const std::s
 
 
 ResourceManager::ResourceManager() {
-	// . . .
+    // . . .
 }
 ResourceManager::ResourceManager(ResourceManager&& other)
-	: vbos(other.vbos), vaos(other.vaos), programs(other.programs), textures(other.textures)
+    : vbos(other.vbos), vaos(other.vaos), programs(other.programs), textures(other.textures)
 {
-	other.vbos.clear();
-	other.vaos.clear();
-	other.programs.clear();
-	other.textures.clear();
+    other.vbos.clear();
+    other.vaos.clear();
+    other.programs.clear();
+    other.textures.clear();
 }
 ResourceManager::~ResourceManager() {
-	if (vbos.size() > 0)
-		glDeleteBuffers(vbos.size(), &vbos[0]);
-	if (vaos.size() > 0)
-		glDeleteVertexArrays(vaos.size(), &vaos[0]);
-	if (textures.size() > 0)
-		glDeleteTextures(textures.size(), &textures[0]);
-	GLuintVector::iterator end = programs.end();
-	GLuintVector::iterator itr = programs.begin();
-	for (; itr < end; ++itr)
-		glDeleteProgram(*itr);
+    if (vbos.size() > 0)
+        glDeleteBuffers(vbos.size(), &vbos[0]);
+    if (vaos.size() > 0)
+        glDeleteVertexArrays(vaos.size(), &vaos[0]);
+    if (textures.size() > 0)
+        glDeleteTextures(textures.size(), &textures[0]);
+    GLuintVector::iterator end = programs.end();
+    GLuintVector::iterator itr = programs.begin();
+    for (; itr < end; ++itr)
+        glDeleteProgram(*itr);
 }
 
 GLuint ResourceManager::CreateVBO() {
-	GLuint id;
-	glGenBuffers(1, &id);
-	vbos.push_back(id);
-	return id;
+    GLuint id;
+    glGenBuffers(1, &id);
+    vbos.push_back(id);
+    return id;
 }
 
 GLuintVector ResourceManager::CreateVBOs (GLsizei n) {
-	GLuintVector nbuffers(n);
-	glGenBuffers(n, &nbuffers[0]);
-	// Local deletion ting
-	for (int i = 0; i < n; ++i)
-		vbos.push_back(nbuffers[i]);
-	return nbuffers;
+    GLuintVector nbuffers(n);
+    glGenBuffers(n, &nbuffers[0]);
+    // Local deletion ting
+    for (int i = 0; i < n; ++i)
+        vbos.push_back(nbuffers[i]);
+    return nbuffers;
 }
 
 GLuint ResourceManager::CreateVAO() {
-	GLuint id;
-	glGenVertexArrays(1, &id);
-	vaos.push_back(id);
-	return id;
+    GLuint id;
+    glGenVertexArrays(1, &id);
+    vaos.push_back(id);
+    return id;
 }
 
 GLuintVector ResourceManager::CreateVAOs (GLsizei n) {
-	GLuintVector nbuffers(n);
-	glGenVertexArrays(n, &nbuffers[0]);
-	// Local deletion ting
-	for (int i = 0; i < n; ++i)
-		vaos.push_back(nbuffers[i]);
-	return nbuffers;
+    GLuintVector nbuffers(n);
+    glGenVertexArrays(n, &nbuffers[0]);
+    // Local deletion ting
+    for (int i = 0; i < n; ++i)
+        vaos.push_back(nbuffers[i]);
+    return nbuffers;
 }
 
 GLuint ResourceManager::LoadShaders(const std::string& vertex, const std::string& geometry, const std::string& fragment) {
-	GLuint VertexShader = glCreateShader(GL_VERTEX_SHADER);
-	genericShaderLoad(VertexShader, vertex, ".vert");
+    GLuint VertexShader = glCreateShader(GL_VERTEX_SHADER);
+    genericShaderLoad(VertexShader, vertex, ".vert");
 
-	GLuint GeometryShader = 0;
-	if (geometry != "") {
-		GeometryShader = glCreateShader(GL_GEOMETRY_SHADER);
-		genericShaderLoad(GeometryShader, geometry, ".geom");
-	}
+    GLuint GeometryShader = 0;
+    if (geometry != "") {
+        GeometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+        genericShaderLoad(GeometryShader, geometry, ".geom");
+    }
 
-	GLuint FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	genericShaderLoad(FragmentShader, fragment, ".frag");
-		
-	GLuint Program = glCreateProgram();
-	glAttachShader(Program, VertexShader);
-	if (geometry != "")
-		glAttachShader(Program, GeometryShader);
-	glAttachShader(Program, FragmentShader);
-	glLinkProgram(Program);
+    GLuint FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    genericShaderLoad(FragmentShader, fragment, ".frag");
+        
+    GLuint Program = glCreateProgram();
+    glAttachShader(Program, VertexShader);
+    if (geometry != "")
+        glAttachShader(Program, GeometryShader);
+    glAttachShader(Program, FragmentShader);
+    glLinkProgram(Program);
 
-	GLint result = GL_FALSE;
-	glGetProgramiv(Program, GL_LINK_STATUS, &result);
-#ifndef DEBUG
-	if (result == GL_FALSE)
+    GLint result = GL_FALSE;
+    glGetProgramiv(Program, GL_LINK_STATUS, &result);
+#ifndef SHADER_DEBUG
+    if (result == GL_FALSE)
 #endif
-	{
-		GLsizei len;
-		glGetProgramiv(Program, GL_INFO_LOG_LENGTH, &len);
-		std::string msg;
+    {
+        GLsizei len;
+        glGetProgramiv(Program, GL_INFO_LOG_LENGTH, &len);
+        std::string msg;
         if (!len) {
             msg = "No message.";
         } else {
-			std::vector<char> log(len);
-			glGetProgramInfoLog(Program, len, NULL, &log[0]);
-			msg = &log[0];
-		}
-#ifdef DEBUG
-		std::cout << msg << std::endl;
-		if (result == GL_FALSE)
+            std::vector<char> log(len);
+            glGetProgramInfoLog(Program, len, NULL, &log[0]);
+            msg = &log[0];
+        }
+#ifdef SHADER_DEBUG
+        std::cout << msg << std::endl;
+        if (result == GL_FALSE)
 #endif
-			throw new CorruptShaderException(msg);
-	}
+            throw new CorruptShaderException(msg);
+    }
 
-	glDeleteShader(VertexShader);
-	glDeleteShader(FragmentShader);
-	programs.push_back(Program);
+    glDeleteShader(VertexShader);
+    glDeleteShader(FragmentShader);
+    programs.push_back(Program);
 
-	return Program;
+    return Program;
 }
 
 GLuintVector ResourceManager::LoadShaders(GLsizei n, const std::string& vertex, const std::string& geometry, const std::string& fragment) {
-	if (n == 1)
-		return GLuintVector(1, LoadShaders(vertex, geometry, fragment));
-	GLuintVector res;
-	res.reserve(n);
+    if (n == 1)
+        return GLuintVector(1, LoadShaders(vertex, geometry, fragment));
+    GLuintVector res;
+    res.reserve(n);
 
-	GLuint VertexShader = glCreateShader(GL_VERTEX_SHADER);
-	genericShaderLoad(VertexShader, vertex, ".vert");
+    GLuint VertexShader = glCreateShader(GL_VERTEX_SHADER);
+    genericShaderLoad(VertexShader, vertex, ".vert");
 
-	GLuint GeometryShader = 0;
-	if (geometry != "") {
-		GeometryShader = glCreateShader(GL_GEOMETRY_SHADER);
-		genericShaderLoad(GeometryShader, geometry, ".geom");
-	}
+    GLuint GeometryShader = 0;
+    if (geometry != "") {
+        GeometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+        genericShaderLoad(GeometryShader, geometry, ".geom");
+    }
 
-	GLuint FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	genericShaderLoad(FragmentShader, fragment, ".frag");
-		
-	GLint result = GL_FALSE;
+    GLuint FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    genericShaderLoad(FragmentShader, fragment, ".frag");
+        
+    GLint result = GL_FALSE;
 
-	for (GLsizei i = 0; i < n; ++i) {
-		GLuint Program = glCreateProgram();
-		glAttachShader(Program, VertexShader);
-		if (geometry != "")
-			glAttachShader(Program, GeometryShader);
-		glAttachShader(Program, FragmentShader);
-		glLinkProgram(Program);
-	
-		glGetProgramiv(Program, GL_LINK_STATUS, &result);
-		if (result == GL_FALSE) {
-			GLsizei len;
-			glGetProgramiv(Program, GL_INFO_LOG_LENGTH, &len);
-			std::vector<char> log(len);
-			glGetProgramInfoLog(Program, len, NULL, &log[0]);
-			std::string msg(&log[0]);
-			std::cout << msg << std::endl;
-			throw new CorruptShaderException(msg);
-		}
-	
-		res     .push_back(Program);
-		programs.push_back(Program);
-	}
-#ifdef DEBUG
-	std::cout << "Successfully linked " << n << " programs with identical shaders." << std::endl;
+    for (GLsizei i = 0; i < n; ++i) {
+        GLuint Program = glCreateProgram();
+        glAttachShader(Program, VertexShader);
+        if (geometry != "")
+            glAttachShader(Program, GeometryShader);
+        glAttachShader(Program, FragmentShader);
+        glLinkProgram(Program);
+    
+        glGetProgramiv(Program, GL_LINK_STATUS, &result);
+        if (result == GL_FALSE) {
+            GLsizei len;
+            glGetProgramiv(Program, GL_INFO_LOG_LENGTH, &len);
+            std::vector<char> log(len);
+            glGetProgramInfoLog(Program, len, NULL, &log[0]);
+            std::string msg(&log[0]);
+            std::cout << msg << std::endl;
+            throw new CorruptShaderException(msg);
+        }
+    
+        res     .push_back(Program);
+        programs.push_back(Program);
+    }
+#ifdef SHADER_DEBUG
+    std::cout << "Successfully linked " << n << " programs with identical shaders." << std::endl;
 #endif
 
-	glDeleteShader(VertexShader);
-	glDeleteShader(FragmentShader);
-	return res;
+    glDeleteShader(VertexShader);
+    glDeleteShader(FragmentShader);
+    return res;
 }
 
 void genericShaderLoad (GLuint shaderID, const std::string& name, const std::string ext) {
-	std::string path = "shaders/" + (name + ext);
-	if (!PhysFS::exists(path)) 
-		throw NoSuchShaderException("Could not find " + path + "!");
+    std::string path = "shaders/" + (name + ext);
+    if (!PhysFS::exists(path)) 
+        throw NoSuchShaderException("Could not find " + path + "!");
 
-	// http://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
-	PhysFS::FileStream file(path, PhysFS::OM_READ);
-	std::ostringstream buff;
-	buff << file.rdbuf();
-	file.close();
+    // http://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
+    PhysFS::FileStream file(path, PhysFS::OM_READ);
+    std::ostringstream buff;
+    buff << file.rdbuf();
+    file.close();
 
-	std::string src = buff.str();
-	const char *csrc = src.c_str();
+    std::string src = buff.str();
+    const char *csrc = src.c_str();
 
-	glShaderSource(shaderID, 1, &csrc, NULL);
-	glCompileShader(shaderID);
+    glShaderSource(shaderID, 1, &csrc, NULL);
+    glCompileShader(shaderID);
 
-	GLint result = GL_FALSE;
-	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &result);
-#ifndef DEBUG
-	if (result == GL_FALSE)
+    GLint result = GL_FALSE;
+    glGetShaderiv(shaderID, GL_COMPILE_STATUS, &result);
+#ifndef SHADER_DEBUG
+    if (result == GL_FALSE)
 #endif
-	{
-		GLsizei len;
-		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &len);
+    {
+        GLsizei len;
+        glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &len);
         std::ostringstream msg;
-		msg << name << ext << ":\n";
+        msg << name << ext << ":\n";
         if (!len) {
             msg << "No message.";
         } else {
@@ -221,208 +221,208 @@ void genericShaderLoad (GLuint shaderID, const std::string& name, const std::str
             glGetShaderInfoLog(shaderID, len, NULL, &log[0]);
             msg << &log[0];
         }
-		std::string smsg = msg.str();
-#ifdef DEBUG
-		std::cout << smsg << std::endl;
-		if (result == GL_FALSE)
+        std::string smsg = msg.str();
+#ifdef SHADER_DEBUG
+        std::cout << smsg << std::endl;
+        if (result == GL_FALSE)
 #endif
-			throw new CorruptShaderException(smsg);
-	}
+            throw new CorruptShaderException(smsg);
+    }
 }
 
 GLuint ResourceManager::LoadTextureArray(const std::string& path) {
-	if (!PhysFS::isDirectory(path))
-		throw NoSuchTextureException("No such directory " + path + "!");
-	auto filesraw = PhysFS::getFileListing(path);
-	std::vector<std::string> files;
-	files.reserve(filesraw.size());
-	for (auto i = filesraw.begin(), e = filesraw.end(); i < e; ++i)
-		files.push_back(path + '/' + *i);
-	return genericTextureLoad(files);
+    if (!PhysFS::isDirectory(path))
+        throw NoSuchTextureException("No such directory " + path + "!");
+    auto filesraw = PhysFS::getFileListing(path);
+    std::vector<std::string> files;
+    files.reserve(filesraw.size());
+    for (auto i = filesraw.begin(), e = filesraw.end(); i < e; ++i)
+        files.push_back(path + '/' + *i);
+    return genericTextureLoad(files);
 }
 GLuint ResourceManager::LoadTextureArray( const std::string& path, const short int start, const short int end) {
-	// *shrug*
-	if (start > end)
-		throw NoSuchTextureException("Invalid texture range!");
+    // *shrug*
+    if (start > end)
+        throw NoSuchTextureException("Invalid texture range!");
 
-	if (!PhysFS::isDirectory(path))
-		throw NoSuchTextureException("No such directory " + path + "!");
+    if (!PhysFS::isDirectory(path))
+        throw NoSuchTextureException("No such directory " + path + "!");
 
-	boost::format filename(path + "/%03d.tga");
+    boost::format filename(path + "/%03d.tga");
 
-	std::vector<std::string> files;
-	for (auto i = start; i < end; ++i) {
-		std::string file = (filename % i).str();
-		if (PhysFS::exists(file))
-			files.push_back(file);
-	}
-	return genericTextureLoad(files);
+    std::vector<std::string> files;
+    for (auto i = start; i < end; ++i) {
+        std::string file = (filename % i).str();
+        if (PhysFS::exists(file))
+            files.push_back(file);
+    }
+    return genericTextureLoad(files);
 }
 
 GLuint ResourceManager::LoadSingleTexture(const std::string& path, GLuint *const width, GLuint *const height) {
-	if (!PhysFS::exists(path))
-		throw NoSuchTextureException("Could not find " + path);
-	imgdata data = {nullptr, 0, 0};
+    if (!PhysFS::exists(path))
+        throw NoSuchTextureException("Could not find " + path);
+    imgdata data = {nullptr, 0, 0};
 
-	try {
-		int i;
-		PhysFS::FileStream file(path, PhysFS::OM_READ);
-		// The callbacks may throw an exception if PhysFS messes up.
-		data.data = stbi_load_from_callbacks(&cbacks, &file, &data.width, &data.height, &i, 4);
-		// C has no such option. Pff
-		if (data.data == nullptr)
-			throw std::runtime_error(stbi_failure_reason());
-	} catch (std::exception& e) {
-		throw NoSuchTextureException("Cannot load " + path + ":" + e.what());
-	}
-	// Helpful stuph
-	if (width  != nullptr)
-		*width = data.width;
-	if (height != nullptr)
-		*height = data.height;
-	// load it into opengl
-	GLuint res;
-	glGenTextures(1, &res);
-	glBindTexture  (GL_TEXTURE_2D, res);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
-	// Single byte per r,g,b and a.
-	GLint prevAlignment;
-	glGetIntegerv(GL_UNPACK_ALIGNMENT, &prevAlignment);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	
-	// Slam it inta  a textcha
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data);
+    try {
+        int i;
+        PhysFS::FileStream file(path, PhysFS::OM_READ);
+        // The callbacks may throw an exception if PhysFS messes up.
+        data.data = stbi_load_from_callbacks(&cbacks, &file, &data.width, &data.height, &i, 4);
+        // C has no such option. Pff
+        if (data.data == nullptr)
+            throw std::runtime_error(stbi_failure_reason());
+    } catch (std::exception& e) {
+        throw NoSuchTextureException("Cannot load " + path + ":" + e.what());
+    }
+    // Helpful stuph
+    if (width  != nullptr)
+        *width = data.width;
+    if (height != nullptr)
+        *height = data.height;
+    // load it into opengl
+    GLuint res;
+    glGenTextures(1, &res);
+    glBindTexture  (GL_TEXTURE_2D, res);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+    // Single byte per r,g,b and a.
+    GLint prevAlignment;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &prevAlignment);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    
+    // Slam it inta  a textcha
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, data.width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data);
 
-	// Delete the imgdata
-	stbi_image_free(data.data);
+    // Delete the imgdata
+    stbi_image_free(data.data);
 
-	// Realign the pixels like they were befo
-	glPixelStorei(GL_UNPACK_ALIGNMENT, prevAlignment);
+    // Realign the pixels like they were befo
+    glPixelStorei(GL_UNPACK_ALIGNMENT, prevAlignment);
 
-	// Cleanup
-	textures.push_back(res);
-	
-	return res;
+    // Cleanup
+    textures.push_back(res);
+    
+    return res;
 }
 
 /*
 static void errchck(const char* str) {
-	//GLenum err = glGetError();
-	//if (err != GL_NO_ERROR) {
-	GLenum err;
-	while ((err = glGetError()) != GL_NO_ERROR) {
-		std::cerr << "fuckup in " << str << std::endl;
-		if (err == GL_INVALID_ENUM)
-			std::cerr << "INVALID ENUM!" << std::endl;
-		else if (err == GL_INVALID_VALUE)
-			std::cerr << "Invalid value!" << std::endl;
-		else if (err == GL_INVALID_OPERATION)
-			std::cerr << "Invalid opreation!" << std::endl;
-		else if (err == GL_INVALID_FRAMEBUFFER_OPERATION)
-			std::cerr << "whoops, there goes the framebuffer" << std::endl;
-		else if (err == GL_OUT_OF_MEMORY)
-			std::cerr << "ABORT ABORT" << std::endl;
-	}
+    //GLenum err = glGetError();
+    //if (err != GL_NO_ERROR) {
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "fuckup in " << str << std::endl;
+        if (err == GL_INVALID_ENUM)
+            std::cerr << "INVALID ENUM!" << std::endl;
+        else if (err == GL_INVALID_VALUE)
+            std::cerr << "Invalid value!" << std::endl;
+        else if (err == GL_INVALID_OPERATION)
+            std::cerr << "Invalid opreation!" << std::endl;
+        else if (err == GL_INVALID_FRAMEBUFFER_OPERATION)
+            std::cerr << "whoops, there goes the framebuffer" << std::endl;
+        else if (err == GL_OUT_OF_MEMORY)
+            std::cerr << "ABORT ABORT" << std::endl;
+    }
 }
 */
 
 // Image loading routines
 int img_read(void *vstream, char *data, int amt) {
-	PhysFS::FileStream *stream = reinterpret_cast<PhysFS::FileStream*>(vstream);
-	stream->read(data, amt);
-	return static_cast<int>(stream->gcount());
+    PhysFS::FileStream *stream = reinterpret_cast<PhysFS::FileStream*>(vstream);
+    stream->read(data, amt);
+    return static_cast<int>(stream->gcount());
 }
 
 void img_skip(void *vstream, unsigned int amt) {
-	reinterpret_cast<PhysFS::FileStream*>(vstream)->ignore(amt);
+    reinterpret_cast<PhysFS::FileStream*>(vstream)->ignore(amt);
 }
 
 int img_eof(void *vstream) {
-	return reinterpret_cast<PhysFS::FileStream*>(vstream)->eof() ? 1 : 0;
+    return reinterpret_cast<PhysFS::FileStream*>(vstream)->eof() ? 1 : 0;
 }
 
 
 GLuint ResourceManager::genericTextureLoad(std::vector<std::string>& files) {
-	std::vector<imgdata> images;
-	images.reserve(files.size());
+    std::vector<imgdata> images;
+    images.reserve(files.size());
 
-	int i;
+    int i;
 
-	for (auto itr = files.begin(), end = files.end(); itr < end; ++itr) {
-		std::string cpath = *itr;
-		if (!boost::algorithm::iends_with(cpath, ".tga"))
-			continue;
-		int x,y;
-		byte *data;
-		try {
-			PhysFS::FileStream file(cpath, PhysFS::OM_READ);
-			// The callbacks may throw an exception if PhysFS messes up.
-			data = stbi_load_from_callbacks(&cbacks, &file, &x, &y, &i, 4);
-			// C has no such option. Pff
-			if (data == nullptr)
-				throw std::runtime_error(stbi_failure_reason());
-		} catch (std::exception& e) {
-			std::cerr << "Failed to load " << cpath << ": " << e.what() << std::endl;
-			continue;
-		}
-		imgdata idata = {data, x, y};
-		images.push_back(idata);
-	}
+    for (auto itr = files.begin(), end = files.end(); itr < end; ++itr) {
+        std::string cpath = *itr;
+        if (!boost::algorithm::iends_with(cpath, ".tga"))
+            continue;
+        int x,y;
+        byte *data;
+        try {
+            PhysFS::FileStream file(cpath, PhysFS::OM_READ);
+            // The callbacks may throw an exception if PhysFS messes up.
+            data = stbi_load_from_callbacks(&cbacks, &file, &x, &y, &i, 4);
+            // C has no such option. Pff
+            if (data == nullptr)
+                throw std::runtime_error(stbi_failure_reason());
+        } catch (std::exception& e) {
+            std::cerr << "Failed to load " << cpath << ": " << e.what() << std::endl;
+            continue;
+        }
+        imgdata idata = {data, x, y};
+        images.push_back(idata);
+    }
 
-	if (images.size() < 1)
-		throw NoSuchTextureException("No textures found!");
+    if (images.size() < 1)
+        throw NoSuchTextureException("No textures found!");
 
-	GLuint res;
-	glGenTextures(1, &res);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, res);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+    GLuint res;
+    glGenTextures(1, &res);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, res);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
 
-	// Single byte per r,g,b and a.
-	GLint prevAlignment;
-	glGetIntegerv(GL_UNPACK_ALIGNMENT, &prevAlignment);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    // Single byte per r,g,b and a.
+    GLint prevAlignment;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &prevAlignment);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-	imgdata *fimg = &images[0];
+    imgdata *fimg = &images[0];
 
-	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, fimg->width, fimg->height,
-						images.size(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, fimg->width, fimg->height,
+                        images.size(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-	i = 0;
-	for (auto itr = images.begin(), end = images.end(); itr < end; ++itr) {
-		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 
-			itr->width, itr->height, 1, GL_RGBA, GL_UNSIGNED_BYTE, itr->data);
-		stbi_image_free(itr->data);
-		++i;
-	}
+    i = 0;
+    for (auto itr = images.begin(), end = images.end(); itr < end; ++itr) {
+        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 
+            itr->width, itr->height, 1, GL_RGBA, GL_UNSIGNED_BYTE, itr->data);
+        stbi_image_free(itr->data);
+        ++i;
+    }
 
-	// Realign the pixels like they were befo
-	glPixelStorei(GL_UNPACK_ALIGNMENT, prevAlignment);
+    // Realign the pixels like they were befo
+    glPixelStorei(GL_UNPACK_ALIGNMENT, prevAlignment);
 
-	// Remember to clean up later
-	textures.push_back(res);
+    // Remember to clean up later
+    textures.push_back(res);
 
-	return res;
+    return res;
 }
 
 GLuint ResourceManager::LoadShaders(const std::string& name) {
-	return LoadShaders(name, "", name);
+    return LoadShaders(name, "", name);
 }
 
 GLuint ResourceManager::LoadShaders(const std::string& vertex, const std::string& fragment) {
-	return LoadShaders(vertex, "", fragment);
+    return LoadShaders(vertex, "", fragment);
 }
 
 GLuintVector ResourceManager::LoadShaders(GLsizei n, const std::string& name) {
-	return LoadShaders(n, name, "", name);
+    return LoadShaders(n, name, "", name);
 }
 
 GLuintVector ResourceManager::LoadShaders(GLsizei n, const std::string& vertex, const std::string& fragment) {
-	return LoadShaders(n, vertex, "", fragment);
+    return LoadShaders(n, vertex, "", fragment);
 }
 

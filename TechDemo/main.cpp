@@ -7,13 +7,10 @@
 //
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <stdexcept>
-#include <vector>
+// GL
+#include "gl.h"
 // GLFW
-#define GLFW_INCLUDE_GL3
-#define GLFW_NO_GLU
 #include <GL/glfw.h>
 // GLM libs
 #include <glm/glm.hpp>
@@ -22,6 +19,8 @@
 // Personal libs
 #include "PhysFS.h"
 #include "ResourceManager.h"
+#include "InputManager.h"
+#include "ObjLoader.h"
 
 // Various hardcoded options
 #define TRIANGLE_DEBUGGING
@@ -33,16 +32,20 @@ void loadshit();
 void loadobj(const std::string& name);
 // renderin
 void opencontext();
-void renderloop();
+void render();
+void errchck(const char* str);
+bool checkwindow();
 // closedown
 void shutdowneverything();
 
 // woo globals
-GLuint VAO, VBO, VEB;
+GLuint VAO, VAB, EAB;
 GLuint program;
 OpenGL::ResourceManager *mgr;
+GLsizei numpoints;
 
 glm::mat4 projectionMatrix;
+glm::mat4 staticViewMatrix;
 
 int main(int argc, const char * argv[])
 {
@@ -50,7 +53,13 @@ int main(int argc, const char * argv[])
         initphysfs(argv[0]);
         opencontext();
         loadshit();
-        renderloop();
+        InputManager mgr;
+        while (checkwindow()) {
+            const auto& in = mgr.GetInput();
+            if (in.Exit)
+                break;
+            render();
+        }
     } catch (std::exception& e) {
         // Place breakpoint here!
         std::cerr << "Uncaught exception!\n" << e.what() << std::endl;
@@ -82,7 +91,14 @@ void opencontext() {
     }
     // Name it
     glfwSetWindowTitle("Gaudy Tech Demo");
-    // OpenGL
+    
+#ifndef __APPLE__
+#error TODO: GLEW!
+#endif
+    
+    /*
+     * OpenGL
+     */
     
     // Heh heh heh cornflowers.
     glClearColor(100.0f / 255.0f, 149.0f / 255.0f, 237.0f / 255.0f, 0.0f);
@@ -90,16 +106,20 @@ void opencontext() {
     // Depth
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
     
     // Alpha
+    /*
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
+    */
 #ifdef TRIANGLE_DEBUGGING
     // Debuging
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 #endif
+    
+    // Points
+    glPointSize(50);
     
     // resource mgmnt
     mgr = new OpenGL::ResourceManager();
@@ -110,25 +130,43 @@ void opencontext() {
         static_cast<GLfloat> (windowHeight),
         0.1f, 100.0f                            // nearZ, farZ
     );
+    staticViewMatrix = glm::lookAt(glm::vec3(10, 0, 0), glm::vec3(10,0,1), glm::vec3(0,1,0));
 }
 
 void loadshit() {
     VAO = mgr->CreateVAO();
-    VBO = mgr->CreateVBO();
-    VEB = mgr->CreateVBO();
+    VAB = mgr->CreateVBO();
+    EAB = mgr->CreateVBO();
     program = mgr->LoadShaders("BasicVertex", "BasicFragment");
-    loadobj("teapot.obj");
+    glUseProgram(program);
+    glUniformMatrix4fv(glGetUniformLocation(program, "Projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(program, "View"      ), 1, GL_FALSE, glm::value_ptr(staticViewMatrix));
+    glUseProgram(0);
+    numpoints = LoadObj("teapot.obj", VAO, VAB, EAB);
 }
 
-void renderloop() {
-    glClear(GL_COLOR_BUFFER_BIT);
-    while (glfwGetKey('Q') != GLFW_PRESS) {
-        glfwSwapBuffers();
-    }
+bool checkwindow() {
+	return glfwGetWindowParam(GLFW_OPENED) == GL_TRUE;
+}
+            
+
+void render() {
+    glUseProgram(program);
+    // TODO: Update view matrix etc
+    glBindVertexArray(VAO);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // hum
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EAB);
+    glDrawElements(GL_TRIANGLES, numpoints, GL_UNSIGNED_SHORT, 0);
+    glfwSwapBuffers();
 }
 void shutdowneverything() {
     delete mgr;
 }
+
+/*
+ * PhysFS
+ */
 
 void killphysfs() {
 	try {
@@ -146,70 +184,19 @@ void initphysfs(const char *argv0) {
 	}
 }
 
-/*
- Obj loader
-*/
-
-void nextline(std::istream& str) {
-    const auto everything = std::numeric_limits<std::streamsize>::max();
-    str.ignore(everything, '\n');
-}
-bool whitespace(const char c) {
-    return c == ' ' || c == '\t';
-}
-bool newline(const char c) {
-    return c == '\n' || c == '\r';
-}
-
-void loadobj(const std::string& name) {
-    if (!PhysFS::exists(name))
-        throw std::runtime_error("Can't find the file " + name);
-    using std::cout;
-    using std::endl;
-	PhysFS::FileStream file(name, PhysFS::OM_READ);
-    file.exceptions(std::ios::failbit | std::ios::badbit);
-    //file.open(name);
-    
-    std::vector<float> poses;
-    std::vector<float> normals;
-    
-    char in;
-    float f;
-    std::string last = "";
-    while (!file.eof()) {
-        file.get(in);
-        if (in == '#') {
-            nextline(file);
-            continue;
-        } else if (whitespace(in) || newline(in))
-            // ignore initial whitespace.
-            continue;
-        // start reading today's command
-        std::ostringstream str;
-        while(!whitespace(in)) {
-            str << in;
-            file.get(in);
-        }
-        // got it!
-        std::string cmd = str.str();
-        if (cmd == "g") {
-            // TODO: groups are not implemented yet!
-        } else if (cmd == "v" || cmd == "vn") {
-            for (int i = 0; i < 3; ++i) {
-                file >> f;
-                if (cmd == "v")
-                    poses.push_back(f);
-                else
-                    normals.push_back(f);
-            }
-        } else {
-            // ain doin shit yet
-            if (cmd != last) cout << endl;
-            cout << cmd;
-            last = cmd;
-        }
-        nextline(file);
-    }
-    cout << endl << "got " << poses.size() << " vertexes and " << normals.size() << " normals!" << endl;
-    
+void errchck(const char* str) {
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR) {
+		std::cerr << "fuckup in " << str << std::endl;
+		if (err == GL_INVALID_ENUM)
+			std::cerr << "INVALID ENUM!" << std::endl;
+		else if (err == GL_INVALID_VALUE)
+			std::cerr << "Invalid value!" << std::endl;
+		else if (err == GL_INVALID_OPERATION)
+			std::cerr << "Invalid opreation!" << std::endl;
+		else if (err == GL_INVALID_FRAMEBUFFER_OPERATION)
+			std::cerr << "whoops, there goes the framebuffer" << std::endl;
+		else if (err == GL_OUT_OF_MEMORY)
+			std::cerr << "ABORT ABORT" << std::endl;
+	}
 }
