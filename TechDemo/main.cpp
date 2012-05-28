@@ -35,17 +35,24 @@ void opencontext();
 void render();
 void errchck(const char* str);
 bool checkwindow();
+// movin
+void processmove(const InputData& in, const double deltatime);
 // closedown
 void shutdowneverything();
 
 // woo globals
 GLuint VAO, VAB, EAB;
 GLuint program;
-OpenGL::ResourceManager *mgr;
+GLuint viewLocation;
 GLsizei numpoints;
 
+OpenGL::ResourceManager *mgr;
+
+bool viewUpdated;
+
+glm::mat4      modelMatrix;
+glm::mat4       viewMatrix;
 glm::mat4 projectionMatrix;
-glm::mat4 staticViewMatrix;
 
 int main(int argc, const char * argv[])
 {
@@ -54,11 +61,18 @@ int main(int argc, const char * argv[])
         opencontext();
         loadshit();
         InputManager mgr;
+        double ltime, ctime, dtime;
         while (checkwindow()) {
+            // Time since last frame
+            ctime = glfwGetTime();
+            dtime = ctime - ltime;
+            ltime = ctime;
             const auto& in = mgr.GetInput();
             if (in.Exit)
                 break;
+            processmove(in, dtime);
             render();
+            usleep(1000);
         }
     } catch (std::exception& e) {
         // Place breakpoint here!
@@ -130,17 +144,25 @@ void opencontext() {
         static_cast<GLfloat> (windowHeight),
         0.1f, 100.0f                            // nearZ, farZ
     );
-    staticViewMatrix = glm::lookAt(glm::vec3(10, 0, 0), glm::vec3(10,0,1), glm::vec3(0,1,0));
+    modelMatrix = glm::scale(glm::mat4(1), glm::vec3(0.1));
+    //viewMatrix  = glm::lookAt(glm::vec3(10, 0, 0), glm::vec3(10,0,1), glm::vec3(0,1,0));
+    viewUpdated = true;
 }
 
 void loadshit() {
     VAO = mgr->CreateVAO();
     VAB = mgr->CreateVBO();
     EAB = mgr->CreateVBO();
+    
     program = mgr->LoadShaders("BasicVertex", "BasicFragment");
     glUseProgram(program);
+    
+    viewLocation = glGetUniformLocation(program, "View");
+    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    
     glUniformMatrix4fv(glGetUniformLocation(program, "Projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-    glUniformMatrix4fv(glGetUniformLocation(program, "View"      ), 1, GL_FALSE, glm::value_ptr(staticViewMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(program, "Model"     ), 1, GL_FALSE, glm::value_ptr(     modelMatrix));
+    
     glUseProgram(0);
     numpoints = LoadObj("teapot.obj", VAO, VAB, EAB);
 }
@@ -151,8 +173,11 @@ bool checkwindow() {
             
 
 void render() {
+    if (!viewUpdated)
+        return;
+    viewUpdated = false;
     glUseProgram(program);
-    // TODO: Update view matrix etc
+    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glBindVertexArray(VAO);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // hum
@@ -162,6 +187,55 @@ void render() {
 }
 void shutdowneverything() {
     delete mgr;
+}
+
+
+void processmove(const InputData& input, const double dtime) {
+    static const float fMouseSpeed = 0.02f;
+    static const float fKeySpeed   = 6.0f;
+	//static const float clampUp = 3.14f * 2.2f;
+	//static const float clampDn = 3.14f * 1.8f;
+    
+    static       float viewAngleH, viewAngleV;
+    static       glm::vec3 viewPos;
+    
+	const float ftime = static_cast<float>(dtime);
+    
+    if (input.DeltaViewX == 0 && input.DeltaViewY == 0 && !(
+        input.Forwards || input.Backwards || input.Left || input.Right))
+        return;
+    
+	// Viewage
+	viewAngleH += fMouseSpeed * input.DeltaViewX;
+	viewAngleV -= fMouseSpeed * input.DeltaViewY;
+	//viewAngleV = (viewAngleV > clampUp) ? clampUp : viewAngleV;
+	//viewAngleV = (viewAngleV < clampDn) ? clampDn : viewAngleV;
+    
+    glm::vec3 dir(
+                 sin(viewAngleH) * cos(viewAngleV),
+                 sin(viewAngleV),
+                 cos(viewAngleH) * cos(viewAngleV)
+                 );
+	float fhvang = viewAngleH - 3.14f / 2.0f;
+	glm::vec3 right (
+                     sin(fhvang),
+                     0,
+                     cos(fhvang)
+                     );
+    glm::vec3 up = glm::cross(dir, right);
+	glm::vec3 vel(0,0,0);
+	float amt = ftime * fKeySpeed;
+	if (input.Forwards)
+		vel += dir * amt;
+	if (input.Backwards)
+		vel -= dir * amt;
+	if (input.Left)
+		vel += right * amt;
+	if (input.Right)
+		vel -= right * amt;
+	viewPos += vel;
+	viewMatrix = glm::lookAt(viewPos, viewPos + dir, up);
+    viewUpdated = true;
 }
 
 /*
