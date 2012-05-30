@@ -126,7 +126,7 @@ GLuint ResourceManager::LoadShaders(const std::string& vertex, const std::string
         std::cout << msg << std::endl;
         if (result == GL_FALSE)
 #endif
-            throw new CorruptShaderException(msg);
+            throw CorruptShaderException(msg);
     }
 
     glDeleteShader(VertexShader);
@@ -172,7 +172,7 @@ GLuintVector ResourceManager::LoadShaders(GLsizei n, const std::string& vertex, 
             glGetProgramInfoLog(Program, len, NULL, &log[0]);
             std::string msg(&log[0]);
             std::cout << msg << std::endl;
-            throw new CorruptShaderException(msg);
+            throw CorruptShaderException(msg);
         }
     
         res     .push_back(Program);
@@ -226,7 +226,7 @@ void genericShaderLoad (GLuint shaderID, const std::string& name, const std::str
         std::cout << smsg << std::endl;
         if (result == GL_FALSE)
 #endif
-            throw new CorruptShaderException(smsg);
+            throw CorruptShaderException(smsg);
     }
 }
 

@@ -23,7 +23,7 @@
 #include "ObjLoader.h"
 
 // Various hardcoded options
-#define TRIANGLE_DEBUGGING
+//#define TRIANGLE_DEBUGGING
 
 
 // loadin
@@ -164,7 +164,7 @@ void loadshit() {
     glUniformMatrix4fv(glGetUniformLocation(program, "Model"     ), 1, GL_FALSE, glm::value_ptr(     modelMatrix));
     
     glUseProgram(0);
-    numpoints = LoadObj("teapot.obj", VAO, VAB, EAB);
+    numpoints = LoadObj("teapot_slashes.obj", VAO, VAB, EAB);
 }
 
 bool checkwindow() {
@@ -173,6 +173,7 @@ bool checkwindow() {
             
 
 void render() {
+    //static GLuint colourpos = glGetUniformLocation(program, "colour");
     if (!viewUpdated)
         return;
     viewUpdated = false;
@@ -180,9 +181,16 @@ void render() {
     glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glBindVertexArray(VAO);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    // debug
+    //glDrawArrays(GL_POINTS, 0, numpoints);
+    
     // hum
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EAB);
-    glDrawElements(GL_TRIANGLES, numpoints, GL_UNSIGNED_SHORT, 0);
+    
+    // drawink
+    glDrawElements(GL_TRIANGLES, numpoints, GL_UNSIGNED_INT, 0);
+    //glDrawElements(GL_POINTS, numpoints, GL_UNSIGNED_INT, 0);
     glfwSwapBuffers();
 }
 void shutdowneverything() {
