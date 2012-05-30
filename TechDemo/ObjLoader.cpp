@@ -13,26 +13,45 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <glm/glm.hpp>
 #include "PhysFS.h"
 
 typedef unsigned int    index_t;
 typedef          int rawindex_t;
-typedef std::pair<index_t, index_t> indexid_t;
+typedef std::tuple<index_t, index_t, index_t> indexid_t;
+
+typedef std::tuple<float, float, float> normalkey_t;
 
 void nextline(std::istream& str);
 bool whitespace(const char c);
 bool newline(const char c);
+
 template <class A>
 void dumpvector(const std::vector<A>& v);
-template <class A>
-void addindex(std::vector<A>& into, rawindex_t put, const size_t vsize);
+
+void addindex(std::vector<index_t>& into, rawindex_t put, const size_t vsize);
+
 rawindex_t readindex(PhysFS::FileStream& file);
+
 indexid_t compileindex(index_t pos, index_t tex, index_t norm);
+
 template <class A, class B>
 bool isvalid(const std::map<A, B>& map, const typename std::map<A, B>::iterator& i);
-void addvars(std::vector<float>& dest, const std::vector<float>& src, size_t start);
 
+void addvars(std::vector<float>& dest, const std::vector<float>& src, size_t start, size_t num = 3);
 
+normalkey_t normalkey(float x, float y, float z);
+normalkey_t normalkey(const glm::vec3& vec);
+
+glm::vec3 getvec(const std::vector<float>& src, size_t start);
+
+/**
+ * Loads a .obj file of the specified name into GPU memory.
+ * @param name The obj file
+ * @param VAO  The Vertex Array Object to store the mesh info in
+ * @param VAB  The Vertex Buffer Object to store the ARRAY_BUFFER in
+ * @param EAB  The Vertex Buffer Object to store the ELEMENT_ARRAY_BUFFER in
+ */
 GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, const GLuint EAB) {
     if (!PhysFS::exists(name))
         throw std::runtime_error("Can't find the file " + name);
@@ -43,13 +62,18 @@ GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, con
     //file.open(name);
     
     
-    std::vector<float> verts;
-    std::vector<float> norms;
+    std::vector<float> verts(3, 0);
+    std::vector<float> texes(2, 0);
+    std::vector<float> norms(3, 0);
     std::vector<index_t> vertind;
+    std::vector<index_t> texpind;
     std::vector<index_t> normind;
     
     std::vector<index_t> verttemp;
+    std::vector<index_t> texptemp;
     std::vector<index_t> normtemp;
+    
+    std::map<normalkey_t, index_t> normallookup;
     
     size_t numv = 0;
     size_t numvn = 0;
@@ -57,9 +81,8 @@ GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, con
     size_t numf = 0;
     
     char in;
-    float f;
-    rawindex_t s;
-    bool single, notex, nonorm;
+    float f, x, y, z;
+    bool single, notex, nonorm, nonormslash;
     std::string last = "";
     while (!file.eof()) {
         file.get(in);
@@ -79,18 +102,22 @@ GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, con
         std::string cmd = str.str();
         if (cmd == "g") {
             // TODO: groups are not implemented yet!
-        } else if (cmd == "v" || cmd == "vn") {
+        } else if (cmd == "v") {
+            ++numv;
             for (int i = 0; i < 3; ++i) {
                 file >> f;
                 if (cmd == "v")
                     verts.push_back(f);
-                else
-                    norms.push_back(f);
             }
-            if (cmd == "v")
-                ++numv;
-            else
-                ++numvn;
+        } else if (cmd == "vn") {
+            ++numvn;
+            file >> x;
+            file >> y;
+            file >> z;
+            norms.push_back(x);
+            norms.push_back(y);
+            norms.push_back(z);
+            normallookup[normalkey(x, y, z)] = numvn;
         } else if (cmd == "f") {
             ++numf;
             
@@ -99,51 +126,75 @@ GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, con
             single = false;
             notex  = false;
             nonorm = false;
+            nonormslash = false;
             addindex(verttemp, readindex(file), numv);
             in = file.peek();
-            if (in != '/')
+            if (in != '/') {
                 single = true;
-            else {
+            } else {
                 file.ignore(1);
                 in = file.peek();
                 if (in == '/')
                     notex = true;
-                else {
+                else
                     // TODO: Tex coordinates
                     readindex(file);
-                }
                 // If the next char is not a / then the file is technically broken.
                 // Unfortunately, sponza_basic.obj does not conform to this view.
-                // TODO: Properly handle broken shit
-                file.ignore(1);
+                in = file.peek();
+                if (in == '/')
+                    file.ignore(1);
+                else
+                    nonormslash = true;
+                    
                 in = file.peek();
                 if (whitespace(in))
                     nonorm = true;
-                else {
+                else
                     addindex(normtemp, readindex(file), numvn);
-                }
             }
             // TODO: Support more than just trianlges
-            // TODO: Handle missing segments
             for (int i = 0; i < 2; ++ i) {
                 addindex(verttemp, readindex(file), numv);
-                if (single) {
-                    // TODO: calculate missing normals
-                    addindex(normtemp, 0, numvn);
-                    // TODO: Tex coordinates
-                } else {
+                if (!single) {
                     file.ignore(1);
                     if (!notex)
                         // TODO: Tex coordinates
                         readindex(file);
-                    file.ignore(1);
-                    if (nonorm)
-                        // TODO: Calculate missing normals
-                        s = 0;
-                    else
-                        s = readindex(file);
-                    addindex(normtemp, s, numvn);
+                    if (!nonormslash)
+                        file.ignore(1);
+                    if (!nonorm)
+                        addindex(normtemp, readindex(file), numvn);                    
                 }
+            }
+            if (nonorm || single) {
+                // grab the face normals in leu of vertex normals
+                cout << "Deducing normals for " << verttemp[0] << ", " << verttemp[1] << ", "<< verttemp[2] << ": ";
+                glm::vec3
+                    a = getvec(verts, verttemp[0]),
+                    b = getvec(verts, verttemp[1]),
+                    c = getvec(verts, verttemp[2]);
+                glm::vec3 norm = glm::normalize(glm::cross(c - a, b - a));
+                cout << "(" << norm.x << "," << norm.y << "," << norm.z << "). ";
+                auto key = normalkey(norm);
+                const auto existing = normallookup.find(key);
+                index_t ind;
+                if (isvalid(normallookup, existing)) {
+                    ind = existing->second;
+                    cout << "This is the existing normal with index: ";
+                } else {
+                    numvn++;
+                    ind = numvn;
+                    norms.push_back(norm.x);
+                    norms.push_back(norm.y);
+                    norms.push_back(norm.z);
+                    normallookup[key] = numvn;
+                    cout << "This is a new normal, now assinged index: ";
+                }
+                cout << ind << endl;
+                normtemp.push_back(ind);
+                normtemp.push_back(ind);
+                normtemp.push_back(ind);
             }
             vertind.insert(vertind.end(), verttemp.begin(), verttemp.end());
             normind.insert(normind.end(), normtemp.begin(), normtemp.end());
@@ -159,18 +210,18 @@ GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, con
     if (last != "")
         cout << '\'' << endl;
     cout << "got " << numv << " vertexes and " << numvn << " normals with " << numf  << " faces using them!" << endl;
-    /*
-    cout << "vertexes:" << endl;
-    dumpvector(verts);
-    cout << "indicies:" << endl;
+    //*
+    cout << "pos ind:" << endl;
     dumpvector(vertind);
+    cout << "norm ind:" << endl;
+    dumpvector(normind);
     // */
     
     // TODO: Compile a list of position indicies and normal indicies
     //        and use that to fill the various buffers.
-    std::vector<float> positions;
-  //std::vector<float> texures;
-    std::vector<float> normals;
+    std::vector<float> positions(3, 0);
+  //std::vector<float> texures(2, 0);
+    std::vector<float> normals(3, 0);
     positions.reserve(verts.size());
   //textures .reserve(texes.size());
     normals  .reserve(norms.size());
@@ -186,19 +237,17 @@ GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, con
             //std::cout << " found: " << loc->second;
             indicies.push_back(loc->second);
         } else {
+            ++numinds;
             addvars(positions, verts, *pos);
           //addvars(textures,  texes, *tex);
             addvars(normals,   norms, *norm);
             indicies.push_back(numinds);
             indmap.insert(std::make_pair(ind, numinds));
             //std::cout << " new: " << numinds;
-            ++numinds;
         }
         //std::cout << std::endl;
     }
     /*
-    cout << "vertexes:" << endl;
-    dumpvector(positions);
     cout << "indicies:" << endl;
     dumpvector(indicies);
     // */   
@@ -263,18 +312,10 @@ void dumpvector(const std::vector<A>& v) {
     }
 }
 
-template <class A>
-void addindex(std::vector<A>& into, rawindex_t put, const size_t vsize) {
-    if (put == 0)
-        // Dud index, presumably due to something being wrong in the file.
-        // Leave it as 0 for an exciting mesh error later.
-        {}
-    else if (put < 0)
+void addindex(std::vector<index_t>& into, rawindex_t put, const size_t vsize) {
+    if (put < 0)
         // Negative values are relative positions
-        put += vsize;
-    else
-        // Indicies start at 1 in the file but 0 in OpenGL.
-        --put;
+        put += vsize + 1;
     into.push_back(put);
 }
 
@@ -285,7 +326,7 @@ rawindex_t readindex(PhysFS::FileStream& file) {
 }
 
 indexid_t compileindex(index_t pos, index_t tex, index_t norm) {
-    return std::make_pair(pos, norm);
+    return std::make_tuple(pos, tex, norm);
 }
 
 template <class A, class B>
@@ -293,17 +334,24 @@ bool isvalid(const std::map<A, B>& map, const typename std::map<A, B>::iterator&
     return i != map.end();
 }
 
-
-void addvars(std::vector<float>& dest, const std::vector<float>& src, size_t start) {
-    start *= 3;
-    for (int i = 0; i < 3; ++i)
+void addvars(std::vector<float>& dest, const std::vector<float>& src, size_t start, size_t num) {
+    start *= num;
+    for (int i = 0; i < num; ++i)
         dest.push_back(src.at(start + i));
 }
 
+glm::vec3 getvec(const std::vector<float>& src, size_t start) {
+    start *= 3;
+    return glm::vec3(src.at(start), src.at(start + 1), src.at(start + 2));
+}
 
+normalkey_t normalkey(float x, float y, float z) {
+    return std::make_tuple(x, y, z);
+}
 
-
-
+normalkey_t normalkey(const glm::vec3& vec) {
+    return std::make_tuple(vec.x, vec.y, vec.z);
+}
 
 
 

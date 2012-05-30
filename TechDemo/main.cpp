@@ -105,7 +105,7 @@ void opencontext() {
     }
     // Name it
     glfwSetWindowTitle("Gaudy Tech Demo");
-    
+    glfwDisable(GLFW_MOUSE_CURSOR);
 #ifndef __APPLE__
 #error TODO: GLEW!
 #endif
@@ -164,7 +164,7 @@ void loadshit() {
     glUniformMatrix4fv(glGetUniformLocation(program, "Model"     ), 1, GL_FALSE, glm::value_ptr(     modelMatrix));
     
     glUseProgram(0);
-    numpoints = LoadObj("teapot_slashes.obj", VAO, VAB, EAB);
+    numpoints = LoadObj("teapot.obj", VAO, VAB, EAB);
 }
 
 bool checkwindow() {
@@ -199,7 +199,7 @@ void shutdowneverything() {
 
 
 void processmove(const InputData& input, const double dtime) {
-    static const float fMouseSpeed = 0.02f;
+    static const float fMouseSpeed = 0.005f;
     static const float fKeySpeed   = 6.0f;
 	//static const float clampUp = 3.14f * 2.2f;
 	//static const float clampDn = 3.14f * 1.8f;

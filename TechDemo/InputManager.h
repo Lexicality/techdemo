@@ -23,11 +23,9 @@ struct InputData {
 class InputManager {
 
 public:
-    InputManager();
-    ~InputManager();
     const InputData GetInput();
 private:
-    int centerx, centery;
+    int lastx, lasty;
     bool lostFocus;
 };
 

@@ -2,19 +2,6 @@
 #include "gl.h"
 #include <GL/glfw.h>
 
-InputManager::InputManager() {
-    GLint data[4];
-    glGetIntegerv(GL_VIEWPORT, data);
-    const GLuint width  = data[2];
-    const GLuint height = data[3];
-    centerx = static_cast<int>(width  / 2);
-    centery = static_cast<int>(height / 2);
-}
-
-InputManager::~InputManager() {
-    //
-}
-
 bool keypress(int key);
 bool mpress  (int btn);
 
@@ -82,8 +69,10 @@ const InputData InputManager::GetInput() {
             */
             int x = 0, y = 0;
             glfwGetMousePos(&x, &y);
-            data.DeltaViewX = static_cast<float>(x - centerx);
-            data.DeltaViewY = static_cast<float>(y - centery);
+            data.DeltaViewX = static_cast<float>(lastx - x);
+            data.DeltaViewY = static_cast<float>(lasty - y);
+            lastx = x;
+            lasty = y;
             /*
             int mwheel = glfwGetMouseWheel();
             if (mwheel != 0) {
@@ -94,7 +83,6 @@ const InputData InputManager::GetInput() {
             }
             */
         }
-        glfwSetMousePos(centerx, centery);
         glfwSetMouseWheel(0);
     } else {
         // Ignore the mouse if the window's not in focus.
