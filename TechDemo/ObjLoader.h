@@ -6,7 +6,15 @@
 //  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 #pragma once
+#include <vector>
 #include "gl.h"
-#include <string>
+#include "ResourceManager.h"
 
-GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, const GLuint EAB);
+struct RenderData {
+    GLuint  EAB;
+    GLuint  VAO;
+    GLsizei IndexCount;
+    GLenum  IndexType;
+};
+
+std::vector<RenderData> LoadObj(const std::string& name, OpenGL::ResourceManager& mgr);

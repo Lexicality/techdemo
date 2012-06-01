@@ -16,34 +16,79 @@
 #include <glm/glm.hpp>
 #include "PhysFS.h"
 
-typedef unsigned int    index_t;
-typedef          int rawindex_t;
-typedef std::tuple<index_t, index_t, index_t> indexid_t;
-
-typedef std::tuple<float, float, float> normalkey_t;
-
-void nextline(std::istream& str);
-bool whitespace(const char c);
-bool newline(const char c);
-
 template <class A>
 void dumpvector(const std::vector<A>& v);
 
-void addindex(std::vector<index_t>& into, rawindex_t put, const size_t vsize);
+bool whitespace(const char c);
+bool newline(const char c);
 
-rawindex_t readindex(PhysFS::FileStream& file);
+class ObjLoader {
+    // Typing lazyness
+    typedef unsigned int    index_t;
+    typedef          int rawindex_t;
+    typedef std::tuple<index_t, index_t, index_t> indexid_t;
+    typedef std::tuple<float, float, float> normalkey_t;
+    
+    struct FaceMode {
+        bool PositionsOnly;
+        bool NoTextures;
+        bool NoNormals;
+        bool NoNormalSlash;
+    };
+    struct VertexData {
+        index_t *positions;
+        index_t *textures;
+        index_t *normals;
+    };
 
-indexid_t compileindex(index_t pos, index_t tex, index_t norm);
+    // File operations
+    void nextline();
+    index_t readindex(size_t existing_count);
 
-template <class A, class B>
-bool isvalid(const std::map<A, B>& map, const typename std::map<A, B>::iterator& i);
-
-void addvars(std::vector<float>& dest, const std::vector<float>& src, size_t start, size_t num = 3);
-
-normalkey_t normalkey(float x, float y, float z);
-normalkey_t normalkey(const glm::vec3& vec);
-
-glm::vec3 getvec(const std::vector<float>& src, size_t start);
+    // vector modding
+    void addvars(std::vector<float>& dest, const std::vector<float>& src, size_t start, size_t num = 3) const;
+    
+    // Key compilation
+    indexid_t compileindex(index_t pos, index_t tex, index_t norm) const;
+    normalkey_t normalkey(float x, float y, float z) const;
+    normalkey_t normalkey(const glm::vec3& vec) const;
+    
+    // Util
+    glm::vec3 getvec(const std::vector<float>& src, size_t start) const;
+    
+    // Vars
+    OpenGL::ResourceManager& mgr;
+    std::stringstream file;
+    std::vector<float>  
+        loadedPositions,
+        loadedTextures,
+        loadedNormals;
+    std::vector<index_t>
+        positionIndicies,
+        textureIndicies,
+        normalIndicies;
+    std::map<normalkey_t, index_t>
+        normalsReverseLookup;
+    size_t
+        trianglesCount,
+        positionCount,
+        textureCount,
+        normalCount;
+    std::vector<RenderData> objects;
+    
+    // Meat n veg
+    std::string GetCommand();
+    void ReadPosition();
+    void ReadNormal();
+    void ReadFace();
+    bool ReadVertex(const FaceMode& mode, const VertexData& verts, const size_t index);
+    
+    RenderData MakeData();
+    // public shizzl
+public:
+    ObjLoader(const std::string& name, OpenGL::ResourceManager& mgr);
+    std::vector<RenderData> GetData() const;
+};
 
 /**
  * Loads a .obj file of the specified name into GPU memory.
@@ -52,195 +97,298 @@ glm::vec3 getvec(const std::vector<float>& src, size_t start);
  * @param VAB  The Vertex Buffer Object to store the ARRAY_BUFFER in
  * @param EAB  The Vertex Buffer Object to store the ELEMENT_ARRAY_BUFFER in
  */
-GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, const GLuint EAB) {
+std::vector<RenderData> LoadObj(const std::string& name, OpenGL::ResourceManager& mgr) {
+    ObjLoader loader(name, mgr);
+    return loader.GetData();
+}
+
+std::vector<RenderData> ObjLoader::GetData() const{
+    return objects;
+}
+    
+ObjLoader::ObjLoader(const std::string& name, OpenGL::ResourceManager& mgr) :
+mgr(mgr),
+loadedPositions(3, 0), loadedTextures(2, 0), loadedNormals(3, 0),
+positionCount(0), textureCount(0), normalCount(0)
+{
     if (!PhysFS::exists(name))
         throw std::runtime_error("Can't find the file " + name);
     using std::cout;
     using std::endl;
-	PhysFS::FileStream file(name, PhysFS::OM_READ);
-    file.exceptions(std::ios::badbit);
-    //file.open(name);
     
+    cout << "g: " << file.tellg() << "p: " << file.tellp() << endl;
     
-    std::vector<float> verts(3, 0);
-    std::vector<float> texes(2, 0);
-    std::vector<float> norms(3, 0);
-    std::vector<index_t> vertind;
-    std::vector<index_t> texpind;
-    std::vector<index_t> normind;
+    { // Woo, RIIA!
+        // http://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
+        PhysFS::FileStream pfile(name, PhysFS::OM_READ);
+        file << pfile.rdbuf();
+        pfile.close();
+    }
+    /*
+    cout << "g: " << file.tellg() << " p: " << file.tellp() << endl;
     
-    std::vector<index_t> verttemp;
-    std::vector<index_t> texptemp;
-    std::vector<index_t> normtemp;
+    cout << "dump: " << endl << file.str() << endl;
     
-    std::map<normalkey_t, index_t> normallookup;
+    cout << "g: " << file.tellg() << " p: " << file.tellp() << endl;
+    */
     
-    size_t numv = 0;
-    size_t numvn = 0;
+    file.seekg(0);
+    file.seekp(0);
     
-    size_t numf = 0;
+    //cout << "g: " << file.tellg() << " p: " << file.tellp() << endl;
     
-    char in;
-    float f, x, y, z;
-    bool single, notex, nonorm, nonormslash;
+    file.exceptions(std::ios::badbit | std::ios::eofbit);
+    
     std::string last = "";
-    while (!file.eof()) {
+    std::string cmd;
+    try {
+        do {
+            cmd = GetCommand();
+            if (cmd == "g") {
+                // TODO: groups are not implemented yet!
+            } else if (cmd == "v") {
+                ReadPosition();
+            } else if (cmd == "vn") {
+                ReadNormal();
+            } else if (cmd == "f") {
+                ReadFace();
+            } else {
+                // ain doin shit yet
+                /*
+                if (last == "") cout << '\'';
+                else if (cmd != last) cout << '\'' << endl << '\'';
+                cout << cmd;
+                last = cmd;
+                // */
+            }
+            nextline();
+        } while (!file.eof());
+    } catch (std::ios_base::failure& e) {
+        // TODO: Do whatever the fuck needs to be done here!
+    } catch (std::exception& e) {
+        std::cerr << "Something's just thrown an exception and I'm not sure what . . . " << e.what() << endl;
+    }
+    if (last != "")
+        cout << '\'' << endl;
+    cout << "got " << positionCount << " vertexes and " << normalCount << " normals with " << trianglesCount  << " faces using them!" << endl;
+    /*
+    cout << "pos ind:" << endl;
+    dumpvector(positionIndicies);
+    cout << "norm ind:" << endl;
+    dumpvector(normalIndicies);
+    // */
+    objects.push_back(MakeData());
+}
+
+std::string ObjLoader::GetCommand() {
+    char in;
+    std::ostringstream str;
+    bool debugger = false;
+    do {
         file.get(in);
+        if (debugger) {
+            std::cout << "in: '" << in << "'" << std::endl;
+            size_t g = file.tellg(), p = file.tellp();
+            std::cout << "g: " << g << " p: " << p << std::endl;
+            std::cout << "remaining file: " << file.str() << std::endl;
+            file.seekg(g);
+            file.seekp(p);
+            debugger = false;
+        }
         if (in == '#') {
-            nextline(file);
+            nextline();
             continue;
         } else if (whitespace(in) || newline(in))
             // ignore initial whitespace.
             continue;
         // start reading today's command
-        std::ostringstream str;
-        while(!whitespace(in)) {
+        while(!(whitespace(in) || newline(in))) {
             str << in;
             file.get(in);
         }
-        // got it!
-        std::string cmd = str.str();
-        if (cmd == "g") {
-            // TODO: groups are not implemented yet!
-        } else if (cmd == "v") {
-            ++numv;
-            for (int i = 0; i < 3; ++i) {
-                file >> f;
-                if (cmd == "v")
-                    verts.push_back(f);
-            }
-        } else if (cmd == "vn") {
-            ++numvn;
-            file >> x;
-            file >> y;
-            file >> z;
-            norms.push_back(x);
-            norms.push_back(y);
-            norms.push_back(z);
-            normallookup[normalkey(x, y, z)] = numvn;
-        } else if (cmd == "f") {
-            ++numf;
-            
-            verttemp.clear();
-            normtemp.clear();
-            single = false;
-            notex  = false;
-            nonorm = false;
-            nonormslash = false;
-            addindex(verttemp, readindex(file), numv);
-            in = file.peek();
-            if (in != '/') {
-                single = true;
-            } else {
-                file.ignore(1);
-                in = file.peek();
-                if (in == '/')
-                    notex = true;
-                else
-                    // TODO: Tex coordinates
-                    readindex(file);
-                // If the next char is not a / then the file is technically broken.
-                // Unfortunately, sponza_basic.obj does not conform to this view.
-                in = file.peek();
-                if (in == '/')
-                    file.ignore(1);
-                else
-                    nonormslash = true;
-                    
-                in = file.peek();
-                if (whitespace(in))
-                    nonorm = true;
-                else
-                    addindex(normtemp, readindex(file), numvn);
-            }
-            // TODO: Support more than just trianlges
-            for (int i = 0; i < 2; ++ i) {
-                addindex(verttemp, readindex(file), numv);
-                if (!single) {
-                    file.ignore(1);
-                    if (!notex)
-                        // TODO: Tex coordinates
-                        readindex(file);
-                    if (!nonormslash)
-                        file.ignore(1);
-                    if (!nonorm)
-                        addindex(normtemp, readindex(file), numvn);                    
-                }
-            }
-            if (nonorm || single) {
-                // grab the face normals in leu of vertex normals
-                cout << "Deducing normals for " << verttemp[0] << ", " << verttemp[1] << ", "<< verttemp[2] << ": ";
-                glm::vec3
-                    a = getvec(verts, verttemp[0]),
-                    b = getvec(verts, verttemp[1]),
-                    c = getvec(verts, verttemp[2]);
-                glm::vec3 norm = glm::normalize(glm::cross(c - a, b - a));
-                cout << "(" << norm.x << "," << norm.y << "," << norm.z << "). ";
-                auto key = normalkey(norm);
-                const auto existing = normallookup.find(key);
-                index_t ind;
-                if (isvalid(normallookup, existing)) {
-                    ind = existing->second;
-                    cout << "This is the existing normal with index: ";
-                } else {
-                    numvn++;
-                    ind = numvn;
-                    norms.push_back(norm.x);
-                    norms.push_back(norm.y);
-                    norms.push_back(norm.z);
-                    normallookup[key] = numvn;
-                    cout << "This is a new normal, now assinged index: ";
-                }
-                cout << ind << endl;
-                normtemp.push_back(ind);
-                normtemp.push_back(ind);
-                normtemp.push_back(ind);
-            }
-            vertind.insert(vertind.end(), verttemp.begin(), verttemp.end());
-            normind.insert(normind.end(), normtemp.begin(), normtemp.end());
-        } else {
-            // ain doin shit yet
-            if (last == "") cout << '\'';
-            else if (cmd != last) cout << '\'' << endl << '\'';
-            cout << cmd;
-            last = cmd;
-        }
-        nextline(file);
+        file.unget();
+        break;
+    } while (true);
+    return str.str();
+}
+
+void ObjLoader::ReadPosition() {
+    ++positionCount;
+    float f;
+    for (int i = 0; i < 3; ++i) {
+        file >> f;
+        loadedPositions.push_back(f);
     }
-    if (last != "")
-        cout << '\'' << endl;
-    cout << "got " << numv << " vertexes and " << numvn << " normals with " << numf  << " faces using them!" << endl;
-    //*
-    cout << "pos ind:" << endl;
-    dumpvector(vertind);
-    cout << "norm ind:" << endl;
-    dumpvector(normind);
-    // */
+}
+
+void ObjLoader::ReadNormal() {
+    ++normalCount;
+    float x, y, z;
+    file >> x;
+    file >> y;
+    file >> z;
+    loadedNormals.push_back(x);
+    loadedNormals.push_back(y);
+    loadedNormals.push_back(z);
+    normalsReverseLookup[normalkey(x, y, z)] = normalCount;
+}
+
+void ObjLoader::ReadFace() {
+    ++trianglesCount;
     
-    // TODO: Compile a list of position indicies and normal indicies
-    //        and use that to fill the various buffers.
+    index_t poses[3] = {0};
+    index_t texes[3] = {0};
+    index_t norms[3] = {0};
+
+    FaceMode slashes = { 0 };
+    VertexData arrs = {
+        poses,
+        texes,
+        norms
+    };
+    
+    // First vertex
+    poses[0] = readindex(positionCount);
+    char in = file.peek();
+    if (in != '/') {
+        slashes.PositionsOnly = true;
+    } else {
+        file.ignore(1);
+        in = file.peek();
+        if (in == '/')
+            slashes.NoTextures = true;
+        else
+            texes[0] = readindex(textureCount);
+        // If the next char is not a / then the file is technically broken.
+        // Unfortunately, sponza_basic.obj does not conform to this view.
+        in = file.peek();
+        if (in == '/')
+            file.ignore(1);
+        else
+            slashes.NoNormalSlash = true;
+        
+        in = file.peek();
+        if (whitespace(in))
+            slashes.NoNormals = true;
+        else
+            norms[0] = readindex(normalCount);
+    }
+    // Second Vertex
+    ReadVertex(slashes, arrs, 1);
+    
+    // Read an arbitrary number of points
+    while (ReadVertex(slashes, arrs, 2)) {
+        // Debuggery
+        //std::cout << "Creating a triangle of position indicies " << poses[0] << ", " << poses[1] << ", "<< poses[2] << "!" << std::endl;
+        // grab the face normals in leu of vertex normals
+        if (slashes.PositionsOnly || slashes.NoNormals) {
+            //std::cout << "Deducing normals for " << poses[0] << ", " << poses[1] << ", "<< poses[2] << ": ";
+            glm::vec3 a,b,c;
+            try {
+                a = getvec(loadedPositions, poses[0]),
+                b = getvec(loadedPositions, poses[1]),
+                c = getvec(loadedPositions, poses[2]);
+            } catch (std::exception& e) {
+                std::cerr << "Attempted to access a non existent vertex! Trying them manually now..." << std::endl;
+                std::cerr << poses[0] << "...";
+                getvec(loadedPositions, poses[0]);
+                std::cerr << poses[1] << "...";
+                getvec(loadedPositions, poses[1]);
+                std::cerr << poses[2] << "...";
+                getvec(loadedPositions, poses[2]);
+                std::cerr << "Done!";
+            }
+            glm::vec3 norm = glm::normalize(glm::cross(c - a, b - a));
+            //std::cout << "(" << norm.x << "," << norm.y << "," << norm.z << "). ";
+            auto key = normalkey(norm);
+            const auto existing = normalsReverseLookup.find(key);
+            index_t ind;
+            if (existing != normalsReverseLookup.end()) {
+                ind = existing->second;
+                //std::cout << "This is the existing normal with index: ";
+            } else {
+                normalCount++;
+                ind = normalCount;
+                loadedNormals.push_back(norm.x);
+                loadedNormals.push_back(norm.y);
+                loadedNormals.push_back(norm.z);
+                normalsReverseLookup[key] = normalCount;
+                //std::cout << "This is a new normal, now assinged index: ";
+            }
+            //std::cout << ind << std::endl;
+            norms[0] = ind;
+            norms[1] = ind;
+            norms[2] = ind;
+        }
+        // Throw the indicies into the global pot
+        for (auto p : poses)
+            positionIndicies.push_back(p);
+        for (auto t : texes)
+            textureIndicies.push_back(t);
+        for (auto n : norms)
+            normalIndicies.push_back(n);
+        // Shift the vertex back one for the triangle fan
+        poses[1] = poses[2];
+        texes[1] = texes[2];
+        norms[1] = norms[2];
+    }
+}
+
+bool ObjLoader::ReadVertex(const FaceMode& mode, const VertexData& verts, const size_t index) {
+    if (file.fail()) {
+        std::cout << "wtf?";
+    }
+    while(true) {
+        char c;
+        file.get(c);
+        if (whitespace(c))
+            continue;
+        file.unget();
+        if (file.fail()) {
+            std::cout << "wtf?";
+        }
+        if (newline(c))
+            return false;
+        break;
+    }
+
+    verts.positions[index] = readindex(positionCount);
+    if (mode.PositionsOnly)
+        return true;
+    file.ignore(1);
+    if (!mode.NoTextures)
+        verts.textures[index] = readindex(textureCount);
+    if (!mode.NoNormalSlash)
+        file.ignore(1);
+    if (!mode.NoNormals)
+        verts.normals[index] = readindex(normalCount);
+    return true;
+}
+
+RenderData ObjLoader::MakeData() {
+
     std::vector<float> positions(3, 0);
   //std::vector<float> texures(2, 0);
     std::vector<float> normals(3, 0);
-    positions.reserve(verts.size());
-  //textures .reserve(texes.size());
-    normals  .reserve(norms.size());
+    positions.reserve(loadedPositions.size());
+  //textures .reserve(loadedTextures.size());
+    normals  .reserve(loadedNormals.size());
     std::vector<index_t> indicies;
     std::map<indexid_t, index_t> indmap;
     index_t numinds = 0;
-    auto pos = vertind.begin(), norm = normind.begin(), end = vertind.end();
+    auto pos = positionIndicies.begin(), norm = normalIndicies.begin(), end = positionIndicies.end();
     for (; pos != end; ++pos, ++norm) {
         //std::cout << "pos: " << *pos << " norm: " << *norm;
         auto ind = compileindex(*pos, 0, *norm);
         auto loc = indmap.find(ind);
-        if (isvalid(indmap, loc)) {
+        if (loc != indmap.end()) {
             //std::cout << " found: " << loc->second;
             indicies.push_back(loc->second);
         } else {
             ++numinds;
-            addvars(positions, verts, *pos);
-          //addvars(textures,  texes, *tex);
-            addvars(normals,   norms, *norm);
+            addvars(positions, loadedPositions, *pos);
+          //addvars(textures,  loadedTextures, *tex);
+            addvars(normals,   loadedNormals, *norm);
             indicies.push_back(numinds);
             indmap.insert(std::make_pair(ind, numinds));
             //std::cout << " new: " << numinds;
@@ -250,14 +398,27 @@ GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, con
     /*
     cout << "indicies:" << endl;
     dumpvector(indicies);
-    // */   
+     // */   
+    
+    
+    auto vbos = mgr.CreateVBOs(2);
+    GLuint VAB = vbos[0];
+    GLuint EAB = vbos[1];
+    GLuint VAO = mgr.CreateVAO();
+    
+    RenderData ret = {
+        EAB,
+        VAO,
+        0,
+        GL_UNSIGNED_INT
+    };
     
     /*
      * Vertacies
      */
-    numv  = positions.size();
-  //numt  = textures .size();
-    numvn = normals  .size();
+    GLsizei numv  = positions.size();
+  //GLsizei numt  = textures .size();
+    GLsizei numvn = normals  .size();
     size_t floatsize = sizeof(float);
     size_t arrsize   = (numv /*+ numt*/ + numvn) * floatsize;
     size_t varrsize  =  numv                     * floatsize;
@@ -289,16 +450,22 @@ GLsizei LoadObj(const std::string& name, const GLuint VAO, const GLuint VAB, con
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    return numi;
+    
+    ret.IndexCount = numi;
+    return ret;
 }
 
-void nextline(std::istream& str) {
+inline
+void ObjLoader::nextline() {
     const auto everything = std::numeric_limits<std::streamsize>::max();
-    str.ignore(everything, '\n');
+    file.ignore(everything, '\n');
 }
+
+inline
 bool whitespace(const char c) {
     return c == ' ' || c == '\t';
 }
+inline
 bool newline(const char c) {
     return c == '\n' || c == '\r';
 }
@@ -312,44 +479,38 @@ void dumpvector(const std::vector<A>& v) {
     }
 }
 
-void addindex(std::vector<index_t>& into, rawindex_t put, const size_t vsize) {
-    if (put < 0)
-        // Negative values are relative positions
-        put += vsize + 1;
-    into.push_back(put);
-}
-
-rawindex_t readindex(PhysFS::FileStream& file) {
+ObjLoader::index_t ObjLoader::readindex(size_t existing_count) {
     rawindex_t s;
     file >> s;
+    if (s < 0) 
+        s += existing_count + 1;
     return s;
 }
 
-indexid_t compileindex(index_t pos, index_t tex, index_t norm) {
-    return std::make_tuple(pos, tex, norm);
-}
-
-template <class A, class B>
-bool isvalid(const std::map<A, B>& map, const typename std::map<A, B>::iterator& i) {
-    return i != map.end();
-}
-
-void addvars(std::vector<float>& dest, const std::vector<float>& src, size_t start, size_t num) {
+void ObjLoader::addvars(std::vector<float>& dest, const std::vector<float>& src, size_t start, size_t num) const {
     start *= num;
     for (int i = 0; i < num; ++i)
         dest.push_back(src.at(start + i));
 }
 
-glm::vec3 getvec(const std::vector<float>& src, size_t start) {
+inline
+glm::vec3 ObjLoader::getvec(const std::vector<float>& src, size_t start) const {
     start *= 3;
     return glm::vec3(src.at(start), src.at(start + 1), src.at(start + 2));
 }
 
-normalkey_t normalkey(float x, float y, float z) {
+inline
+ObjLoader::indexid_t ObjLoader::compileindex(index_t pos, index_t tex, index_t norm) const {
+    return std::make_tuple(pos, tex, norm);
+}
+
+inline
+ObjLoader::normalkey_t ObjLoader::normalkey(float x, float y, float z) const {
     return std::make_tuple(x, y, z);
 }
 
-normalkey_t normalkey(const glm::vec3& vec) {
+inline
+ObjLoader::normalkey_t ObjLoader::normalkey(const glm::vec3& vec) const {
     return std::make_tuple(vec.x, vec.y, vec.z);
 }
 

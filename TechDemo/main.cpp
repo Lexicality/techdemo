@@ -41,7 +41,6 @@ void processmove(const InputData& in, const double deltatime);
 void shutdowneverything();
 
 // woo globals
-GLuint VAO, VAB, EAB;
 GLuint program;
 GLuint viewLocation;
 GLsizei numpoints;
@@ -53,6 +52,8 @@ bool viewUpdated;
 glm::mat4      modelMatrix;
 glm::mat4       viewMatrix;
 glm::mat4 projectionMatrix;
+
+std::vector<RenderData> chunks;
 
 int main(int argc, const char * argv[])
 {
@@ -133,7 +134,7 @@ void opencontext() {
 #endif
     
     // Points
-    glPointSize(50);
+    glPointSize(20);
     
     // resource mgmnt
     mgr = new OpenGL::ResourceManager();
@@ -150,10 +151,6 @@ void opencontext() {
 }
 
 void loadshit() {
-    VAO = mgr->CreateVAO();
-    VAB = mgr->CreateVBO();
-    EAB = mgr->CreateVBO();
-    
     program = mgr->LoadShaders("BasicVertex", "BasicFragment");
     glUseProgram(program);
     
@@ -164,7 +161,7 @@ void loadshit() {
     glUniformMatrix4fv(glGetUniformLocation(program, "Model"     ), 1, GL_FALSE, glm::value_ptr(     modelMatrix));
     
     glUseProgram(0);
-    numpoints = LoadObj("teapot.obj", VAO, VAB, EAB);
+    chunks = LoadObj("cessna.obj", *mgr);
 }
 
 bool checkwindow() {
@@ -179,17 +176,19 @@ void render() {
     viewUpdated = false;
     glUseProgram(program);
     glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-    glBindVertexArray(VAO);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    // debug
-    //glDrawArrays(GL_POINTS, 0, numpoints);
-    
-    // hum
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EAB);
-    
-    // drawink
-    glDrawElements(GL_TRIANGLES, numpoints, GL_UNSIGNED_INT, 0);
+    for (RenderData obj : chunks) {
+        glBindVertexArray(obj.VAO);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        // debug
+        glDrawArrays(GL_POINTS, 0, numpoints);
+        
+        // hum
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj.EAB);
+        
+        // drawink
+        glDrawElements(GL_TRIANGLES, obj.IndexCount, obj.IndexType, 0);
+    }
     //glDrawElements(GL_POINTS, numpoints, GL_UNSIGNED_INT, 0);
     glfwSwapBuffers();
 }
