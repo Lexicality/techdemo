@@ -145,12 +145,26 @@ void opencontext() {
         static_cast<GLfloat> (windowHeight),
         0.1f, 100.0f                            // nearZ, farZ
     );
-    modelMatrix = glm::scale(glm::mat4(1), glm::vec3(0.1));
+    //modelMatrix = glm::scale(glm::mat4(1), glm::vec3(0.01));
     //viewMatrix  = glm::lookAt(glm::vec3(10, 0, 0), glm::vec3(10,0,1), glm::vec3(0,1,0));
     viewUpdated = true;
 }
 
 void loadshit() {
+    std::string basedir, objfile;
+    PhysFS::FileStream in("load.txt", PhysFS::OM_READ);
+    std::getline(in, basedir);
+    std::getline(in, objfile);
+    float scale;
+    in >> scale;
+    in.close();
+    
+    if (objfile == "")
+        objfile = basedir + ".obj";
+    PhysFS::mount("objs/" + basedir, "data");
+    modelMatrix = glm::scale(glm::mat4(1), glm::vec3(scale));
+    chunks = LoadObj("data/" + objfile, *mgr);
+    
     program = mgr->LoadShaders("BasicVertex", "BasicFragment");
     glUseProgram(program);
     
@@ -161,7 +175,6 @@ void loadshit() {
     glUniformMatrix4fv(glGetUniformLocation(program, "Model"     ), 1, GL_FALSE, glm::value_ptr(     modelMatrix));
     
     glUseProgram(0);
-    chunks = LoadObj("cessna.obj", *mgr);
 }
 
 bool checkwindow() {
@@ -257,7 +270,8 @@ void killphysfs() {
 void initphysfs(const char *argv0) {
     try {
 		PhysFS::init(argv0);
-		PhysFS::mount("./", "", false);
+        // ewww hacky!!
+		PhysFS::mount("/Users/lexi/techdemo", "", false);
         std::atexit(killphysfs);
 	} catch (PhysFS::Exception& e) {
         std::cerr << "Could not start PhysFS! " << e.what() << std::endl;

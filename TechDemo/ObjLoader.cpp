@@ -116,8 +116,6 @@ positionCount(0), textureCount(0), normalCount(0)
     using std::cout;
     using std::endl;
     
-    cout << "g: " << file.tellg() << "p: " << file.tellp() << endl;
-    
     { // Woo, RIIA!
         // http://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
         PhysFS::FileStream pfile(name, PhysFS::OM_READ);
