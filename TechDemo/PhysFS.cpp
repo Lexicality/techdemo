@@ -1,3 +1,9 @@
+//
+// PhysFS C++ Wrapper
+// This code was placed into the public domain by Holger 'CABAListic' Frydrych of OGRE.
+// A copy of it may be found at http://www.ogre3d.org/forums/viewtopic.php?f=5&t=35254
+//
+
 #include "PhysFS.h"
 
 namespace PhysFS

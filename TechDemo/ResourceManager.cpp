@@ -1,3 +1,9 @@
+//
+// OpenGL Resource Manager
+// Copyright (C) 2012 Lexi Robinson
+// This code is freely available under the MIT licence.
+// Please read the header file for more information.
+//
 #include "ResourceManager.h"
 #include <boost/format.hpp>
 #include <boost/algorithm/string/predicate.hpp>

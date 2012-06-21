@@ -1,10 +1,11 @@
+//
+// PhysFS C++ Wrapper
+// This code was placed into the public domain by Holger 'CABAListic' Frydrych of OGRE.
+// A copy of it may be found at http://www.ogre3d.org/forums/viewtopic.php?f=5&t=35254
+//
+
 #ifndef __PHYSFS_PP_H__
 #define __PHYSFS_PP_H__
-
-/*
- * Public domain'd by Holger 'CABAListic' Frydrych of OGRE
- * http://www.ogre3d.org/forums/viewtopic.php?f=5&t=35254 
- */
 
 extern "C"
 {

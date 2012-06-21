@@ -11,9 +11,6 @@ At this point, any information provided in or by the files should be
 taken as unreliable reference works and should not be used in any
 situation, production or otherwise.
 
-All source files within this repository are licensed by the MIT license
-attached in the LICENSE file, even when they state that they are not.
-
 For a good selection of .obj files, try [Morgan McGuire's Mesh
 Page][Meshes].
 

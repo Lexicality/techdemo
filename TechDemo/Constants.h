@@ -1,9 +1,7 @@
 //
-//  Constants.h
-//  TechDemo
-//
-//  Created by Lexi Robinson on 27/05/2012.
-//  Copyright (c) 2012 Lexi Robinson. All rights reserved.
+// TechDemo/Constants.h
+// Copyright (C) 2012 Lexi Robinson
+// This code is freely available under the MIT licence.
 //
 #pragma once
 

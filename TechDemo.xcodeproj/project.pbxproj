@@ -64,6 +64,8 @@
 		D31EF7E01572830C00A3CD4E /* gl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gl.h; sourceTree = "<group>"; };
 		D31EF7E1157395D300A3CD4E /* ObjLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ObjLoader.h; path = TechDemo/ObjLoader.h; sourceTree = "<group>"; };
 		D31EF7E21573965000A3CD4E /* ObjLoader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ObjLoader.cpp; path = TechDemo/ObjLoader.cpp; sourceTree = "<group>"; };
+		D3BE63D71593760B0046A0E3 /* Loader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Loader.h; path = TechDemo/Loader/Loader.h; sourceTree = "<group>"; };
+		D3BE63DB159390D00046A0E3 /* README.mkdn */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.mkdn; sourceTree = "<group>"; };
 		D3EAF5571566C97800F5394F /* TechDemo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TechDemo; sourceTree = BUILT_PRODUCTS_DIR; };
 		D3EAF55B1566C97800F5394F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D3EAF55D1566C97800F5394F /* TechDemo.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; name = TechDemo.1; path = TechDemo/TechDemo.1; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 		D38B25611575762500D56847 /* Misc shit */ = {
 			isa = PBXGroup;
 			children = (
+				D3BE63DB159390D00046A0E3 /* README.mkdn */,
 				D3EAF55D1566C97800F5394F /* TechDemo.1 */,
 				D3EAF5581566C97800F5394F /* Products */,
 				D31EF7D31572189B00A3CD4E /* Libs */,
@@ -129,9 +132,18 @@
 			name = "Misc shit";
 			sourceTree = "<group>";
 		};
+		D3BE63D91593760F0046A0E3 /* Obj Loader */ = {
+			isa = PBXGroup;
+			children = (
+				D3BE63D71593760B0046A0E3 /* Loader.h */,
+			);
+			name = "Obj Loader";
+			sourceTree = "<group>";
+		};
 		D3EAF54C1566C97700F5394F = {
 			isa = PBXGroup;
 			children = (
+				D3BE63D91593760F0046A0E3 /* Obj Loader */,
 				D31EF7D715722D0E00A3CD4E /* Shaders */,
 				D3EAF55A1566C97800F5394F /* TechDemo */,
 				D31EF7D01572182900A3CD4E /* Helpers */,
@@ -186,6 +198,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0430;
+				ORGANIZATIONNAME = N/a;
 			};
 			buildConfigurationList = D3EAF5511566C97700F5394F /* Build configuration list for PBXProject "TechDemo" */;
 			compatibilityVersion = "Xcode 3.2";

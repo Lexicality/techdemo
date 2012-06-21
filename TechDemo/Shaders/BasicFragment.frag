@@ -1,7 +1,9 @@
 #version 150
-
-//uniform vec3 colour;
-
+//
+// TechDemo/Shaders/BasicFragment.frag
+// Copyright (C) 2012 Lexi Robinson
+// This code is freely available under the MIT licence.
+//
 in vec3 normal;
 
 out vec4 outc;

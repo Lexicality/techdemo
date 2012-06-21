@@ -1,3 +1,9 @@
+//
+// GLFW Input Manager
+// Copyright (C) 2012 Lexi Robinson
+// This code is freely available under the MIT licence.
+// Please read the header file for more information.
+//
 #include "InputManager.h"
 #include "gl.h"
 #include <GL/glfw.h>

@@ -1,9 +1,8 @@
 //
-//  ObjLoader.cpp
-//  TechDemo
-//
-//  Created by Lexi Robinson on 28/05/2012.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+// TechDemo/ObjLoader.cpp
+// Copyright (C) 2012 Lexi Robinson
+// This code is freely available under the MIT licence.
+// Please read the header file for more information.
 //
 #include "ObjLoader.h"
 #include <iostream>
@@ -511,13 +510,3 @@ inline
 ObjLoader::normalkey_t ObjLoader::normalkey(const glm::vec3& vec) const {
     return std::make_tuple(vec.x, vec.y, vec.z);
 }
-
-
-
-
-
-
-
-
-
-
