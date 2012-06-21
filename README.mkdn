@@ -1,0 +1,22 @@
+Yet Another Guady Tech Demo
+===========================
+
+This is my personal adventure into the world of Global Illuminaton,
+complete with hand-made OBJ/MTL loaders.
+
+Its current stage is "Massive WIP" and comes with no suggestions that it
+will even slightly work for anyone else or on any machine other than my
+own.  
+At this point, any information provided in or by the files should be
+taken as unreliable reference works and should not be used in any
+situation, production or otherwise.
+
+All source files within this repository are licensed by the MIT license
+attached in the LICENSE file, even when they state that they are not.
+
+For a good selection of .obj files, try [Morgan McGuire's Mesh
+Page][Meshes].
+
+
+
+[Meshes]: http://graphics.cs.williams.edu/data/meshes.xml
